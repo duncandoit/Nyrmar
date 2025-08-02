@@ -29,9 +29,29 @@
 		C3DAF2542E3BDB1B00C46474 /* NyrmarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NyrmarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C3DAF26D2E3BDC9B00C46474 /* Exceptions for "Nyrmar" folder in "NyrmarTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				core/Avatar.swift,
+				core/component/SKNodeComponent.swift,
+				core/Entity.swift,
+				core/entity/ShapeEntity.swift,
+				core/GameWorld.swift,
+				core/system/ParametricMovementSystem.swift,
+				core/system/RenderSyncSystem.swift,
+				core/system/SpawnSystem.swift,
+			);
+			target = C3DAF2492E3BDB1B00C46474 /* NyrmarTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C3DAF2332E3BDB1A00C46474 /* Nyrmar */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C3DAF26D2E3BDC9B00C46474 /* Exceptions for "Nyrmar" folder in "NyrmarTests" target */,
+			);
 			path = Nyrmar;
 			sourceTree = "<group>";
 		};

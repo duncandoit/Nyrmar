@@ -1,0 +1,32 @@
+//
+//  RenderSyncSystem.swift
+//  Nyrmar
+//
+//  Created by Zachary Duncan on 8/1/25.
+//
+
+import Foundation
+
+class RenderSyncSystem: System
+{
+    let requiredComponent: ComponentTypeID = AvatarComponent.typeID
+
+    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+    {
+        let avatarComp = component as! AvatarComponent
+        guard let transformComp = avatarComp.sibling(TransformComponent.self) else
+        {
+            print(#function, "Could not find TransformComponent for AvatarComponent")
+            return
+        }
+        
+        guard let avatar = avatarComp.avatar else
+        {
+            print(#function, "Could not find SKNode for AvatarComponent")
+            return
+        }
+        
+        avatar.position = transformComp.position
+        avatar.zPosition = transformComp.zPosition
+    }
+}
