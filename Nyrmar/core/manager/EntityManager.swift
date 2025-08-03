@@ -13,7 +13,7 @@ class EntityManager
     private var m_EntityComponentsByType: [Entity: [ComponentTypeID: Component]] = [:]
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
     private var m_Systems: [System]
-    private var m_Avatars: [Entity: Avatar] = [:]
+//    private var m_Avatars: [Entity: Avatar] = [:]
     private var m_World: GameWorld!
     
     static var shared: EntityManager { EntityManager() }
@@ -55,7 +55,7 @@ class EntityManager
     
     func clearScene()
     {
-        m_Avatars.removeAll()
+//        m_Avatars.removeAll()
         // Mark AvatarComponents as wantToSpawn
     }
      
@@ -73,7 +73,7 @@ class EntityManager
     
     func removeAllEntities()
     {
-        m_Avatars.removeAll()
+//        m_Avatars.removeAll()
         m_EntityComponentsByType.removeAll()
         m_ComponentsByType.removeAll()
     }
@@ -118,25 +118,25 @@ class EntityManager
         return m_EntityComponentsByType[entity]?[T.typeID] as? T
     }
     
-    func addAvatar(_ avatar: AvatarComponent, atTransform transformComp: TransformComponent, with owningEntity: Entity)
-    {
-        guard m_Avatars[owningEntity] == nil else
-        {
-            print(#function + ": Avatar already exists for Entity: \(owningEntity).")
-            return
-        }
-        let avatar = Avatar(
-            textureName: "Avatar",
-            owningEntity: owningEntity,
-            size: CGSize(width: 10, height: 10),
-            position: transformComp.position,
-            zPosition: transformComp.zPosition
-        )
-        
-        m_Avatars[owningEntity] = avatar
-        m_World.addChild(avatar)
-        print(#function + ": Spawned Avatar for Entity: \(owningEntity).")
-    }
+//    func addAvatar(_ avatar: AvatarComponent, atTransform transformComp: TransformComponent, with owningEntity: Entity)
+//    {
+//        guard m_Avatars[owningEntity] == nil else
+//        {
+//            print(#function + ": Avatar already exists for Entity: \(owningEntity).")
+//            return
+//        }
+//        let avatar = Avatar(
+//            textureName: "Avatar",
+//            owningEntity: owningEntity,
+//            size: CGSize(width: 10, height: 10),
+//            position: transformComp.position,
+//            zPosition: transformComp.zPosition
+//        )
+//        
+//        m_Avatars[owningEntity] = avatar
+//        m_World.addChild(avatar)
+//        print(#function + ": Spawned Avatar for Entity: \(owningEntity).")
+//    }
     
     func removeAvatar(with owningEntity: Entity)
     {

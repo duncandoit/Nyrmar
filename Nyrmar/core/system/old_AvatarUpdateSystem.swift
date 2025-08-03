@@ -18,7 +18,7 @@
 //        if avatarComp.wantsToSpawn
 //        {
 //            let transformComp = TransformComponent()
-//            EntityAdmin.shared.addComponent(transformComp, to: avatarComp.owningEntity)
+//            EntityManager.shared.addComponent(transformComp, to: avatarComp.owningEntity)
 //            
 //            let avatar = Avatar(
 //                textureName: "defaultTexture",
@@ -27,7 +27,7 @@
 //                zPosition: transformComp.zPosition
 //            )
 //            
-//            EntityAdmin.shared.addAvatar(avatar, with: avatarComp.owningEntity)
+//            EntityManager.shared.addAvatar(avatar, with: avatarComp.owningEntity)
 //            
 //            avatarComp.wantsToSpawn = false
 //        }
@@ -35,14 +35,14 @@
 //        // Despawn avatars
 //        if avatarComp.wantsToBeDestroyed
 //        {
-//            EntityAdmin.shared.removeAvatar(with: avatarComp.owningEntity)
-//            EntityAdmin.shared.removeEntity(avatarComp.owningEntity)
+//            EntityManager.shared.removeAvatar(with: avatarComp.owningEntity)
+//            EntityManager.shared.removeEntity(avatarComp.owningEntity)
 //            
 //            return
 //        }
 //        
 //        // Update transform
-//        guard let avatar = EntityAdmin.shared.getAvatar(with: avatarComp.owningEntity) else
+//        guard let avatar = EntityManager.shared.getAvatar(with: avatarComp.owningEntity) else
 //        {
 //            print(#function + ": Missing Avatar for Entity: \(avatarComp.owningEntity).")
 //            return

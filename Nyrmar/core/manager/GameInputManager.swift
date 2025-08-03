@@ -5,7 +5,7 @@
 //  Created by Zachary Duncan on 8/2/25.
 //
 
-import Foundation
+import UIKit
 
 /// Singleton that provides input lookups for SKScene
 class GameInputManager
@@ -13,17 +13,16 @@ class GameInputManager
     static let shared = GameInputManager()
     private init() {}
 
-    /// Return a dict of a newly created entity with GameInputComponent and TimestampComponent
-    func entityForInput(_ input: GameInput, atPoint pos: CGPoint) -> [Entity: [Component]]
+    /// Adds newly created Components needed for input system to the Entity
+    func addComponentsForEntity(entity: Entity, forInput input: GameInput, atPoint pos: CGPoint)
     {
-        let entity = Entity()
-        let inputComp = InputComponent()
+        let inputComp = GameInputComponent()
         inputComp.pressedInputs.insert(input)
         inputComp.touchLocation = pos
 
-        let timestampComp = TimestampComponent(lastUpdated: CACurrentMediaTime())
+        let timestampComp = TimeComponent(interval: CACurrentMediaTime())
 
-        return [entity: [inputComp, timestampComp]]
+        EntityAdmin.shared.addComponents([inputComp, timestampComp], to: entity)
     }
 }
 
@@ -38,31 +37,26 @@ enum GameInput: Hashable
     {
         switch keyCommand.input
         {
-        case UIKeyCommand.inputLeftArrow: return .leftArrow
+        case UIKeyCommand.inputLeftArrow:  return .leftArrow
         case UIKeyCommand.inputRightArrow: return .rightArrow
-        case UIKeyCommand.inputUpArrow: return .upArrow
-        case UIKeyCommand.inputDownArrow: return .downArrow
-        case " ": return .space
+        case UIKeyCommand.inputUpArrow:    return .upArrow
+        case UIKeyCommand.inputDownArrow:  return .downArrow
+        case " ":                          return .space
         default:
             if let input = keyCommand.input { return .custom(input) }
             return nil
         }
     }
-
-    /// Factory to produce a map of entities to their Input and Timestamp components
-    static func captureInputs(world: GameWorld) -> [UUID: (GameInputComponent, TimestampComponent)]
+    
+    static func from(_ touch: UITouch) -> GameInput?
     {
-        var results: [UUID: (GameInputComponent, TimestampComponent)] = [:]
-
-        for (entityId, comps) in world.allEntities()
+        switch touch.phase
         {
-            if let inputComp = comps[GameInputComponent.typeID] as? GameInputComponent,
-               let timestampComp = comps[TimestampComponent.typeID] as? TimestampComponent
-            {
-                results[entityId] = (inputComp, timestampComp)
-            }
+        case .began:     return .touchDown
+        case .moved:     return .touchMoved
+        case .ended:     return .touchUp
+        case .cancelled: return .touchUp
+        default:         return nil
         }
-
-        return results
     }
 }

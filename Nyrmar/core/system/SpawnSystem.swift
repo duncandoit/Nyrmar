@@ -22,6 +22,6 @@ class NodeSpawnSystem: System
             return
         }
         
-        EntityAdmin.shared.addAvatar(avatarComp, atTransform: transformComp, with: avatarComp.owningEntity)
+        EntityManager.shared.addAvatar(avatarComp, atTransform: transformComp, with: avatarComp.owningEntity)
     }
 }

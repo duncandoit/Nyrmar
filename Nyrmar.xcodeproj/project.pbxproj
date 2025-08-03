@@ -34,10 +34,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				core/Avatar.swift,
-				core/component/SKNodeComponent.swift,
+				core/component/AvatarComponent.swift,
 				core/Entity.swift,
 				core/entity/ShapeEntity.swift,
 				core/GameWorld.swift,
+				core/manager/AvatarManager.swift,
+				core/system/GameInputSystem.swift,
 				core/system/ParametricMovementSystem.swift,
 				core/system/RenderSyncSystem.swift,
 				core/system/SpawnSystem.swift,
