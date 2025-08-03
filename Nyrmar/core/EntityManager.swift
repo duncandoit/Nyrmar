@@ -1,5 +1,5 @@
 //
-//  EntityAdmin.swift
+//  EntityManager.swift
 //  Nyrmar
 //
 //  Created by Zachary Duncan on 7/31/25.
@@ -8,7 +8,7 @@
 import SpriteKit
 import GameplayKit
 
-class EntityAdmin
+class EntityManager
 {
     private var m_EntityComponentsByType: [Entity: [ComponentTypeID: Component]] = [:]
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
@@ -16,15 +16,15 @@ class EntityAdmin
     private var m_Avatars: [Entity: Avatar] = [:]
     private var m_World: GameWorld!
     
-    static var shared: EntityAdmin { EntityAdmin() }
+    static var shared: EntityManager { EntityManager() }
     
-    init()
+    private init()
     {
         m_Systems = [
             // TargetName
             // LifetimeEntity
         //    PlayerSpawnSystem(),
-        //    PlayerInputSystem(),
+            GameInputSystem(),
             // Behavior
             // AimAtTarget
             // MouseCursorFollow
@@ -88,6 +88,14 @@ class EntityAdmin
         m_EntityComponentsByType[entity]?[component.typeID()] = component
         m_ComponentsByType[component.typeID(), default: []].append(component)
         updateSiblingReferences(for: entity)
+    }
+    
+    func addComponents(_ components: [Component], to entity: Entity)
+    {
+        for component in components
+        {
+            addComponent(component, to: entity)
+        }
     }
     
     private func updateSiblingReferences(for entity: Entity)
