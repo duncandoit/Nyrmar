@@ -13,12 +13,14 @@ class AvatarComponent: Component
     
     weak var avatar: Avatar?
     var owningEntity: Entity
-    var wantsToSpawn = false
+    var textureName: String
+    var wantsToSpawn = true
     var wantsToBeDestroyed = false
 
-    init(avatar: Avatar, owningEntity: Entity)
+    init(avatar: Avatar, owningEntity: Entity, textureName: String)
     {
         self.avatar = avatar
         self.owningEntity = owningEntity
+        self.textureName = textureName
     }
 }

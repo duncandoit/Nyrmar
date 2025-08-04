@@ -23,7 +23,7 @@ class EntityManager
         m_Systems = [
             // TargetName
             // LifetimeEntity
-        //    PlayerSpawnSystem(),
+            SpawnSystem(),
             GameInputSystem(),
             // Behavior
             // AimAtTarget
@@ -44,23 +44,39 @@ class EntityManager
             // EntitySpawner
         //    LifeSpanSystem(),
             // SpawnOnDestroy
+            GameInputCleanupSystem()
         ]
     }
     
     func initializeScene(_ world: GameWorld)
     {
-        clearScene()
-        self.m_World = world
+//        clearScene()
+        m_World = world
     }
     
-    func clearScene()
-    {
-//        m_Avatars.removeAll()
-        // Mark AvatarComponents as wantToSpawn
-    }
+//    func clearScene()
+//    {
+////        m_Avatars.removeAll()
+////        for (entity, components) in m_EntityComponentsByType
+//        var i = m_EntityComponentsByType.count
+//        for _ in 0 ..< m_EntityComponentsByType.count
+//        {
+//            i -= 1
+//            let isAvatarEntity = components.contains { (compType: ComponentTypeID, comp: any Component) in
+//                return compType == AvatarComponent.typeID
+//            }
+//            
+//        }
+//    }
      
-    func addEntity(_ entity: Entity = Entity()) -> Entity
+    func addEntity(_ entity: Entity = Entity()) -> Entity?
     {
+        guard m_EntityComponentsByType[entity] == nil else
+        {
+            print(#function + ": Entity:\(entity) already exists.")
+            return nil
+        }
+        
         m_EntityComponentsByType[entity] = [:]
         return entity
     }
@@ -73,7 +89,7 @@ class EntityManager
     
     func removeAllEntities()
     {
-//        m_Avatars.removeAll()
+        AvatarManager.shared.removeAllAvatars()
         m_EntityComponentsByType.removeAll()
         m_ComponentsByType.removeAll()
     }
@@ -85,7 +101,14 @@ class EntityManager
     
     func addComponent(_ component: Component, to entity: Entity)
     {
-        m_EntityComponentsByType[entity]?[component.typeID()] = component
+        guard var components = m_EntityComponentsByType[entity] else
+        {
+            print(#function + ": Entity does not exist.")
+            return
+        }
+        
+        components[component.typeID()] = component
+        m_EntityComponentsByType[entity] = components
         m_ComponentsByType[component.typeID(), default: []].append(component)
         updateSiblingReferences(for: entity)
     }
@@ -96,6 +119,34 @@ class EntityManager
         {
             addComponent(component, to: entity)
         }
+    }
+    
+    func getComponent<T: Component>(for entity: Entity) -> T?
+    {
+        return m_EntityComponentsByType[entity]?[T.typeID] as? T
+    }
+    
+    func removeComponent<T: Component>(ofType type: T.Type, from entity: Entity)
+    {
+        guard var components = m_EntityComponentsByType[entity] else
+        {
+            return
+        }
+        
+        guard let removed = components.removeValue(forKey: T.typeID) else
+        {
+            return
+        }
+                
+        m_EntityComponentsByType[entity] = components
+        m_ComponentsByType[T.typeID]?.removeAll { $0 === removed }
+        
+        if m_ComponentsByType[T.typeID]?.isEmpty == true
+        {
+            m_ComponentsByType.removeValue(forKey: T.typeID)
+        }
+
+        updateSiblingReferences(for: entity)
     }
     
     private func updateSiblingReferences(for entity: Entity)
@@ -113,34 +164,9 @@ class EntityManager
         }
     }
     
-    func getComponent<T: Component>(for entity: Entity) -> T?
-    {
-        return m_EntityComponentsByType[entity]?[T.typeID] as? T
-    }
-    
-//    func addAvatar(_ avatar: AvatarComponent, atTransform transformComp: TransformComponent, with owningEntity: Entity)
-//    {
-//        guard m_Avatars[owningEntity] == nil else
-//        {
-//            print(#function + ": Avatar already exists for Entity: \(owningEntity).")
-//            return
-//        }
-//        let avatar = Avatar(
-//            textureName: "Avatar",
-//            owningEntity: owningEntity,
-//            size: CGSize(width: 10, height: 10),
-//            position: transformComp.position,
-//            zPosition: transformComp.zPosition
-//        )
-//        
-//        m_Avatars[owningEntity] = avatar
-//        m_World.addChild(avatar)
-//        print(#function + ": Spawned Avatar for Entity: \(owningEntity).")
-//    }
-    
     func removeAvatar(with owningEntity: Entity)
     {
-        guard let avatar = m_Avatars[owningEntity] else
+        guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
         {
             print(#function + ": Avatar with owningEntity: \(owningEntity) not found.")
             return
@@ -148,16 +174,6 @@ class EntityManager
         
         avatar.removeFromParent()
         print(#function + ": Removed Avatar with owningEntity: \(owningEntity).")
-    }
-    
-    func getAvatar(with owningEntity: Entity) -> Avatar?
-    {
-        return m_Avatars[owningEntity]
-    }
-    
-    func allAvatars() -> [SKSpriteNode]
-    {
-        return Array(m_Avatars.values)
     }
     
     func tick(deltaTime: TimeInterval)

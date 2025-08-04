@@ -22,7 +22,7 @@ class RenderSyncSystem: System
         
         guard let avatar = avatarComp.avatar else
         {
-            print(#function, "Could not find SKNode for AvatarComponent")
+            print(#function, "Could not find Avatar reference in AvatarComponent")
             return
         }
         

@@ -11,7 +11,18 @@ import UIKit
 class GameInputManager
 {
     static let shared = GameInputManager()
-    private init() {}
+    
+    var entity: Entity
+    
+    private init()
+    {
+        guard let inputEntity = EntityManager.shared.addEntity() else
+        {
+            fatalError(#function + ": An Entity could not be created for GameInputManager.")
+        }
+        
+        entity = inputEntity
+    }
 
     /// Adds newly created Components needed for input system to the Entity
     func addComponentsForEntity(entity: Entity, forInput input: GameInput, atPoint pos: CGPoint)
@@ -22,7 +33,7 @@ class GameInputManager
 
         let timestampComp = TimeComponent(interval: CACurrentMediaTime())
 
-        EntityAdmin.shared.addComponents([inputComp, timestampComp], to: entity)
+        EntityManager.shared.addComponents([inputComp, timestampComp], to: entity)
     }
 }
 

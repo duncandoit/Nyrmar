@@ -10,28 +10,76 @@ import GameplayKit
 
 class GameWorld: SKScene
 {
-    private var lastUpdateTime : TimeInterval = 0
+    private var m_LastUpdateTime : TimeInterval = 0
+    private var m_LocalPlayerControllerEntity: Entity!
+    private let m_LocalPlayerControllerID = UUID()
+    private var m_AvatarEntity: Entity!
     
     override func sceneDidLoad()
     {
-        lastUpdateTime = 0
+        m_LastUpdateTime = 0
         EntityManager.shared.initializeScene(self)
+        
+        registerLocalPlayer()
+        registerControlledAvatar()
+        
+        print(#function)
+    }
+    
+    func registerLocalPlayer()
+    {
+        m_LocalPlayerControllerEntity = EntityManager.shared.addEntity()
+        
+        let inputComp = GameInputComponent()
+        EntityManager.shared.addComponent(inputComp, to: m_LocalPlayerControllerEntity)
+
+        let timestamp = TimeComponent(interval: CACurrentMediaTime())
+        EntityManager.shared.addComponent(timestamp, to: m_LocalPlayerControllerEntity)
+    }
+
+    func registerControlledAvatar()
+    {
+        m_AvatarEntity = EntityManager.shared.addEntity()
+        
+        let avatar = AvatarManager.shared.createAvatar(atTransform: TransformComponent(), with: m_AvatarEntity)
+        guard let avatar = avatar else
+        {
+            print(#function + ": avatar wasn't created.")
+            return
+        }
+        
+        let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
+        EntityManager.shared.addComponent(controlledByComp, to: m_AvatarEntity)
+        
+//        addChild(avatar)
+    }
+    
+    func getLocalPlayerID() -> UUID
+    {
+        return m_LocalPlayerControllerID
+    }
+    
+    func getControlledAvatarEntity() -> Entity
+    {
+        return m_AvatarEntity
     }
     
     func touchDown(atPoint pos : CGPoint)
     {
         // Send to input manager
-        GameInputManager.shared.addComponentsForEntity(entity: <#T##Entity#>, forInput: <#T##GameInput#>, atPoint: <#T##CGPoint#>)(.touchDown, atPoint: pos)
+        GameInputManager.shared.addComponentsForEntity(entity: m_AvatarEntity, forInput: .touchDown, atPoint: pos)
     }
     
     func touchMoved(toPoint pos : CGPoint)
     {
         // Send to input manager
+        GameInputManager.shared.addComponentsForEntity(entity: m_AvatarEntity, forInput: .touchMoved, atPoint: pos)
     }
     
     func touchUp(atPoint pos : CGPoint)
     {
         // Send to input manager
+        GameInputManager.shared.addComponentsForEntity(entity: m_AvatarEntity, forInput: .touchUp, atPoint: pos)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -56,14 +104,14 @@ class GameWorld: SKScene
     
     override func update(_ currentTime: TimeInterval)
     {
-        if (lastUpdateTime == 0)
+        if (m_LastUpdateTime == 0)
         {
-            lastUpdateTime = currentTime
+            m_LastUpdateTime = currentTime
         }
         
         // Calculate time since last update
-        let dt = currentTime - lastUpdateTime
+        let dt = currentTime - m_LastUpdateTime
         EntityManager.shared.tick(deltaTime: dt)
-        lastUpdateTime = currentTime
+        m_LastUpdateTime = currentTime
     }
 }

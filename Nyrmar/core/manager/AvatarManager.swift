@@ -10,13 +10,12 @@ import Foundation
 class AvatarManager
 {
     static let shared = AvatarManager()
-    private init() {}
     
-    // TODO: Move avatar collection here for finer tracking
     private var m_Avatars: [Entity: Avatar] = [:]
     
-    // TODO: Add the createAvatar() here rather than EntityManager for better division of responsibility
-    func createAvatar(_ avatar: AvatarComponent, atTransform transformComp: TransformComponent, with owningEntity: Entity = Entity()) -> Avatar?
+    private init() {}
+    
+    func createAvatar(atTransform transformComp: TransformComponent, with owningEntity: Entity = Entity(), controlledBy controllerID: UUID? = nil) -> Avatar?
     {
         guard m_Avatars[owningEntity] == nil else
         {
@@ -24,7 +23,7 @@ class AvatarManager
             return nil
         }
         let avatar = Avatar(
-            textureName: "Avatar",
+            textureName: "finalfall-logo",
             owningEntity: owningEntity,
             size: CGSize(width: 10, height: 10),
             position: transformComp.position,
@@ -33,10 +32,21 @@ class AvatarManager
         
         m_Avatars[owningEntity] = avatar
         print(#function + ": Spawned Avatar for Entity: \(owningEntity).")
+        return avatar
     }
     
     func avatar(for entity: Entity) -> Avatar?
     {
         return m_Avatars[entity]
+    }
+    
+    func allAvatars() -> [Avatar]
+    {
+        return Array(m_Avatars.values)
+    }
+    
+    func removeAllAvatars()
+    {
+        m_Avatars.removeAll()
     }
 }
