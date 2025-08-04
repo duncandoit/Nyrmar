@@ -1,5 +1,5 @@
 //
-//  EntityManager.swift
+//  EntityAdmin.swift
 //  Nyrmar
 //
 //  Created by Zachary Duncan on 7/31/25.
@@ -8,7 +8,7 @@
 import SpriteKit
 import GameplayKit
 
-class EntityManager
+class EntityAdmin
 {
     private var m_EntityComponentsByType: [Entity: [ComponentTypeID: Component]] = [:]
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
@@ -16,14 +16,17 @@ class EntityManager
 //    private var m_Avatars: [Entity: Avatar] = [:]
     private var m_World: GameWorld!
     
-    static var shared: EntityManager { EntityManager() }
+    private static var hasInitialized = false
+    static var shared: EntityAdmin = EntityAdmin()
     
     private init()
     {
+        precondition(!EntityAdmin.hasInitialized, "Error: EntityAdmin should only ever be initialized once.")
+        EntityAdmin.hasInitialized = true
+        
         m_Systems = [
             // TargetName
             // LifetimeEntity
-            SpawnSystem(),
             GameInputSystem(),
             // Behavior
             // AimAtTarget
@@ -41,7 +44,7 @@ class EntityManager
             // DebugEntity
             // ImageAnimation
             RenderSyncSystem(),
-            // EntitySpawner
+            SpawnSystem(),
         //    LifeSpanSystem(),
             // SpawnOnDestroy
             GameInputCleanupSystem()
@@ -73,18 +76,31 @@ class EntityManager
     {
         guard m_EntityComponentsByType[entity] == nil else
         {
-            print(#function + ": Entity:\(entity) already exists.")
+            print(#function + " - Entity:\(entity) already exists.")
             return nil
         }
         
         m_EntityComponentsByType[entity] = [:]
+        print(#function + " - Entity:\(entity) added.\n")
         return entity
     }
     
     func removeEntity(_ entity: Entity)
     {
-        m_EntityComponentsByType.removeValue(forKey: entity)
-        // TODO: when removing an Entity we must also remove its owned components from m_ComponentsByType
+        guard let components = m_EntityComponentsByType.removeValue(forKey: entity) else
+        {
+            print(#function + " - Entity:\(entity) does not exist.")
+            return
+        }
+        
+        for (typeId, comp) in components
+        {
+            m_ComponentsByType[typeId]?.removeAll { $0 === comp }
+            if m_ComponentsByType[typeId]?.isEmpty == true
+            {
+                m_ComponentsByType.removeValue(forKey: typeId)
+            }
+        }
     }
     
     func removeAllEntities()
@@ -103,7 +119,7 @@ class EntityManager
     {
         guard var components = m_EntityComponentsByType[entity] else
         {
-            print(#function + ": Entity does not exist.")
+            print(#function + " - Entity:\(entity) does not exist.")
             return
         }
         
@@ -130,11 +146,13 @@ class EntityManager
     {
         guard var components = m_EntityComponentsByType[entity] else
         {
+            print(#function + " - Entity:\(entity) does not exist.")
             return
         }
         
         guard let removed = components.removeValue(forKey: T.typeID) else
         {
+            print(#function + " - Component not found on Entity:\(entity).")
             return
         }
                 
@@ -153,7 +171,7 @@ class EntityManager
     {
         guard let components = m_EntityComponentsByType[entity] else
         {
-            print(#function + ":  Entity not found: \(entity).")
+            print(#function + " -  Entity not found: \(entity).")
             return
         }
         
@@ -168,12 +186,12 @@ class EntityManager
     {
         guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
         {
-            print(#function + ": Avatar with owningEntity: \(owningEntity) not found.")
+            print(#function + " - Avatar with owningEntity: \(owningEntity) not found.")
             return
         }
         
         avatar.removeFromParent()
-        print(#function + ": Removed Avatar with owningEntity: \(owningEntity).")
+        print(#function + " - Removed Avatar with owningEntity: \(owningEntity).")
     }
     
     func tick(deltaTime: TimeInterval)
@@ -183,7 +201,7 @@ class EntityManager
             let componentTypeID = system.requiredComponent
             guard let components = m_ComponentsByType[componentTypeID] else
             {
-                print(#function + ": Component does not exist for type: \(componentTypeID).");
+                print(#function + " - Component does not exist for type:\(componentTypeID).");
                 continue
             }
 

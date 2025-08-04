@@ -19,19 +19,19 @@ class GameInputSystem: System
         let controlledByComp = component as! ControlledByComponent
         guard controlledByComp.controllerID == world.getLocalPlayerID() else
         {
-            print(#function + ": Not controlled by local player")
+            print(#function + " - Not controlled by local player")
             return
         }
         
         guard let inputComp = controlledByComp.sibling(GameInputComponent.self) else
         {
-            print(#function + ": No input given to controlled Entity.")
+            print(#function + " - No input given to controlled Entity.")
             return
         }
         
         guard let transformComp = inputComp.sibling(TransformComponent.self) else
         {
-            print(#function + ": Controllable Entity does not have a TransformComponent.")
+            print(#function + " - Controllable Entity does not have a TransformComponent.")
             return
         }
 
@@ -46,7 +46,7 @@ class GameInputSystem: System
         // Modify the transform of the entity with this inputComp
         guard let pos = inputComp.touchLocation else
         {
-            print(#function + ": GameInputComponent had a nil touch event")
+            print(#function + " - GameInputComponent had a nil touch event")
             return
         }
         

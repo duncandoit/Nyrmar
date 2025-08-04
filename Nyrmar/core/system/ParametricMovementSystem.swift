@@ -17,7 +17,7 @@ class ParametricMovementSystem: System
         let moveComp = component as! ParametricMovementComponent
         guard let transformComp = moveComp.sibling(TransformComponent.self) else
         {
-            print(#function + ": Missing TransformComponent for \(moveComp)")
+            print(#function + " - Missing TransformComponent for \(moveComp)")
             return
         }
 

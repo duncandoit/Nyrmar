@@ -17,39 +17,39 @@ class GameWorld: SKScene
     
     override func sceneDidLoad()
     {
+        super.sceneDidLoad()
+        print(#function)
+        
         m_LastUpdateTime = 0
-        EntityManager.shared.initializeScene(self)
+        EntityAdmin.shared.initializeScene(self)
         
         registerLocalPlayer()
         registerControlledAvatar()
-        
-        print(#function)
     }
     
     func registerLocalPlayer()
     {
-        m_LocalPlayerControllerEntity = EntityManager.shared.addEntity()
+        m_LocalPlayerControllerEntity = EntityAdmin.shared.addEntity()
         
         let inputComp = GameInputComponent()
-        EntityManager.shared.addComponent(inputComp, to: m_LocalPlayerControllerEntity)
+        EntityAdmin.shared.addComponent(inputComp, to: m_LocalPlayerControllerEntity)
 
         let timestamp = TimeComponent(interval: CACurrentMediaTime())
-        EntityManager.shared.addComponent(timestamp, to: m_LocalPlayerControllerEntity)
+        EntityAdmin.shared.addComponent(timestamp, to: m_LocalPlayerControllerEntity)
     }
 
     func registerControlledAvatar()
     {
-        m_AvatarEntity = EntityManager.shared.addEntity()
+        m_AvatarEntity = EntityAdmin.shared.addEntity()
         
-        let avatar = AvatarManager.shared.createAvatar(atTransform: TransformComponent(), with: m_AvatarEntity)
-        guard let avatar = avatar else
+        guard let _ = AvatarManager.shared.createAvatar(atTransform: TransformComponent(), with: m_AvatarEntity) else
         {
-            print(#function + ": avatar wasn't created.")
+            print(#function + " - avatar wasn't created.")
             return
         }
         
         let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
-        EntityManager.shared.addComponent(controlledByComp, to: m_AvatarEntity)
+        EntityAdmin.shared.addComponent(controlledByComp, to: m_AvatarEntity)
         
 //        addChild(avatar)
     }
@@ -111,7 +111,7 @@ class GameWorld: SKScene
         
         // Calculate time since last update
         let dt = currentTime - m_LastUpdateTime
-        EntityManager.shared.tick(deltaTime: dt)
+        EntityAdmin.shared.tick(deltaTime: dt)
         m_LastUpdateTime = currentTime
     }
 }

@@ -18,7 +18,7 @@ class SpawnSystem: System
         let avatarComp = component as! AvatarComponent
         guard avatarComp.wantsToSpawn else
         {
-            print(#function + ": Avatar does not want to spawn.")
+            print(#function + " - Avatar does not want to spawn.")
             return
         }
         
@@ -30,7 +30,7 @@ class SpawnSystem: System
         
         guard let avatar = AvatarManager.shared.createAvatar(atTransform: transformComp, with: avatarComp.owningEntity) else
         {
-            print(#function + ": Avatar could not be made for Entity:\(avatarComp.owningEntity).")
+            print(#function + " - Avatar could not be made for Entity:\(avatarComp.owningEntity).")
             return
         }
         

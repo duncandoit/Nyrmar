@@ -16,7 +16,7 @@ class GameInputManager
     
     private init()
     {
-        guard let inputEntity = EntityManager.shared.addEntity() else
+        guard let inputEntity = EntityAdmin.shared.addEntity() else
         {
             fatalError(#function + ": An Entity could not be created for GameInputManager.")
         }
@@ -33,7 +33,7 @@ class GameInputManager
 
         let timestampComp = TimeComponent(interval: CACurrentMediaTime())
 
-        EntityManager.shared.addComponents([inputComp, timestampComp], to: entity)
+        EntityAdmin.shared.addComponents([inputComp, timestampComp], to: entity)
     }
 }
 
