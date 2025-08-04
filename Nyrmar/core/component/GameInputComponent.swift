@@ -11,7 +11,7 @@ import UIKit
 class GameInputComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: GameInputComponent.self)
-    var siblings: [ComponentTypeID: WeakComponentRef]?
+    var siblings: SiblingContainer?
 
     var touchLocation: CGPoint? = nil
     var pressedInputs: Set<GameInput> = []

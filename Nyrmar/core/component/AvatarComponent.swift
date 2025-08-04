@@ -9,7 +9,7 @@
 class AvatarComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: AvatarComponent.self)
-    var siblings: [ComponentTypeID: WeakComponentRef]?
+    var siblings: SiblingContainer?
     
     weak var avatar: Avatar?
     var owningEntity: Entity

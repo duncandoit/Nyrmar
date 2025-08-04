@@ -10,7 +10,7 @@ import Foundation
 class TimeComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: TimeComponent.self)
-    var siblings: [ComponentTypeID: WeakComponentRef]?
+    var siblings: SiblingContainer?
     
     var interval: TimeInterval
     

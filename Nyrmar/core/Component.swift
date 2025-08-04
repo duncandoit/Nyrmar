@@ -11,11 +11,17 @@ typealias ComponentTypeID = UInt32
 /// Global counter for assigning unique IDs
 private var nextComponentTypeID: ComponentTypeID = 0
 
-/// Protocol for all Components
+/// Protocol for all Components, with a shared sibling container for efficient updates
 protocol Component: AnyObject
 {
     static var typeID: ComponentTypeID { get }
-    var siblings: [ComponentTypeID: WeakComponentRef]? { get set }
+    var siblings: SiblingContainer? { get set }
+    func typeID() -> ComponentTypeID
+}
+
+class SiblingContainer
+{
+    var refs: [ComponentTypeID: WeakComponentRef] = [:]
 }
 
 extension Component
@@ -28,7 +34,7 @@ extension Component
     /// Get a sibling of a specific type
     func sibling<T: Component>(_ type: T.Type = T.self) -> T?
     {
-        return siblings?[T.typeID]?.value as? T
+        return siblings?.refs[T.typeID]?.value as? T
     }
 }
 

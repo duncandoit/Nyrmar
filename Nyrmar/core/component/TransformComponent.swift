@@ -10,7 +10,7 @@ import CoreFoundation
 class TransformComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: TransformComponent.self)
-    var siblings: [ComponentTypeID : WeakComponentRef]?
+    var siblings: SiblingContainer?
     
     var isDirty: Bool = true
     var position: CGPoint = .zero

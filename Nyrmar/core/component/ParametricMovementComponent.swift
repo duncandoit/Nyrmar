@@ -12,7 +12,7 @@ import CoreFoundation
 class ParametricMovementComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: ParametricMovementComponent.self)
-    var siblings: [ComponentTypeID: WeakComponentRef]?
+    var siblings: SiblingContainer?
 
     var amplitude: CGVector
     var frequency: CGFloat

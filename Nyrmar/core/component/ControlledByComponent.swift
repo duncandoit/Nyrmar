@@ -10,7 +10,7 @@ import Foundation
 class ControlledByComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: ControlledByComponent.self)
-    var siblings: [ComponentTypeID: WeakComponentRef]?
+    var siblings: SiblingContainer?
 
     var controllerID: UUID
     
