@@ -11,9 +11,6 @@ import GameplayKit
 class GameWorld: SKScene
 {
     private var m_LastUpdateTime : TimeInterval = 0
-    private var m_LocalPlayerControllerEntity: Entity!
-    private let m_LocalPlayerControllerID = UUID()
-    private var m_AvatarEntity: Entity!
     
     override func sceneDidLoad()
     {
@@ -21,70 +18,31 @@ class GameWorld: SKScene
         print("[" + #fileID + "]: " + #function)
         
         m_LastUpdateTime = 0
+        
+        registerEntityAdmin()
+    }
+    
+    func registerEntityAdmin()
+    {
         EntityAdmin.shared.initializeScene(self)
-        
-        registerLocalPlayer()
-        registerControlledAvatar()
-    }
-    
-    func registerLocalPlayer()
-    {
-        m_LocalPlayerControllerEntity = EntityAdmin.shared.addEntity()
-        
-        let inputComp = GameInputComponent()
-        EntityAdmin.shared.addComponent(inputComp, to: m_LocalPlayerControllerEntity)
-
-        let timestamp = TimeComponent(interval: CACurrentMediaTime())
-        EntityAdmin.shared.addComponent(timestamp, to: m_LocalPlayerControllerEntity)
-    }
-
-    func registerControlledAvatar()
-    {
-        m_AvatarEntity = EntityAdmin.shared.addEntity()
-        
-        let transformComp = TransformComponent()
-        let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
-//        let avatar = Avatar(textureName: "finalfall-logo", owningEntity: m_AvatarEntity, size: CGSizeMake(50, 50), position: .zero, zPosition: 1)
-//        AvatarManager.shared.addAvatar(avatar)
-        
-        let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
-        EntityAdmin.shared.addComponents([transformComp, controlledByComp, avatarComp], to: m_AvatarEntity)
-        
-//        guard let _ = AvatarManager.shared.createAvatar(atTransform: transformComp, with: m_AvatarEntity) else
-//        {
-//            print("[" + #fileID + "]: " + #function + " -> avatar wasn't created.")
-//            return
-//        }
-        
-        //addChild(avatar)
-    }
-    
-    func getLocalPlayerID() -> UUID
-    {
-        return m_LocalPlayerControllerID
-    }
-    
-    func getControlledAvatarEntity() -> Entity
-    {
-        return m_AvatarEntity
     }
     
     func touchDown(atPoint pos : CGPoint)
     {
         // Send to input manager
-        GameInputManager.shared.addComponentsForEntity(entity: m_AvatarEntity, forInput: .touchDown, atPoint: pos)
+        GameInputManager.shared.addComponentsForEntity(entity: EntityAdmin.shared.getControlledAvatarEntity(), forInput: .touchDown, atPoint: pos)
     }
     
     func touchMoved(toPoint pos : CGPoint)
     {
         // Send to input manager
-        GameInputManager.shared.addComponentsForEntity(entity: m_AvatarEntity, forInput: .touchMoved, atPoint: pos)
+        GameInputManager.shared.addComponentsForEntity(entity: EntityAdmin.shared.getControlledAvatarEntity(), forInput: .touchMoved, atPoint: pos)
     }
     
     func touchUp(atPoint pos : CGPoint)
     {
         // Send to input manager
-        GameInputManager.shared.addComponentsForEntity(entity: m_AvatarEntity, forInput: .touchUp, atPoint: pos)
+        GameInputManager.shared.addComponentsForEntity(entity: EntityAdmin.shared.getControlledAvatarEntity(), forInput: .touchUp, atPoint: pos)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)

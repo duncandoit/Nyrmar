@@ -17,7 +17,7 @@ class GameInputSystem: System
     func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
     {
         let controlledByComp = component as! ControlledByComponent
-        guard controlledByComp.controllerID == world.getLocalPlayerID() else
+        guard controlledByComp.controllerID == EntityAdmin.shared.getLocalPlayerID() else
         {
             print("[" + #fileID + "]: " + #function + " -> Not controlled by local player")
             return

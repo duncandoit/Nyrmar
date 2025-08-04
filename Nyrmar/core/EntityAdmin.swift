@@ -13,8 +13,11 @@ class EntityAdmin
     private var m_EntityComponentsByType: [Entity: [ComponentTypeID: Component]] = [:]
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
     private var m_Systems: [System]
-//    private var m_Avatars: [Entity: Avatar] = [:]
     private var m_World: GameWorld!
+    
+    private let m_LocalPlayerControllerID: UUID
+    private var m_LocalPlayerControllerEntity: Entity
+    private var m_AvatarEntity: Entity
     
     private static var hasInitialized = false
     static var shared: EntityAdmin = EntityAdmin()
@@ -23,6 +26,10 @@ class EntityAdmin
     {
         precondition(!EntityAdmin.hasInitialized, "Error: EntityAdmin should only ever be initialized once.")
         EntityAdmin.hasInitialized = true
+        
+        m_LocalPlayerControllerID = UUID()
+        m_LocalPlayerControllerEntity = Entity()
+        m_AvatarEntity = Entity()
         
         m_Systems = [
                 // TargetName
@@ -49,6 +56,14 @@ class EntityAdmin
                 // SpawnOnDestroy
             GameInputCleanupSystem()
         ]
+        
+        // Post initialization
+        
+        let _ = addEntity(m_LocalPlayerControllerEntity)
+        initializeLocalPlayer()
+        
+        let _ = addEntity(m_AvatarEntity)
+        initializeControlledAvatar()
     }
     
     func initializeScene(_ world: GameWorld)
@@ -57,20 +72,51 @@ class EntityAdmin
         m_World = world
     }
     
-//    func clearScene()
-//    {
-////        m_Avatars.removeAll()
-////        for (entity, components) in m_EntityComponentsByType
-//        var i = m_EntityComponentsByType.count
-//        for _ in 0 ..< m_EntityComponentsByType.count
-//        {
-//            i -= 1
-//            let isAvatarEntity = components.contains { (compType: ComponentTypeID, comp: any Component) in
-//                return compType == AvatarComponent.typeID
-//            }
-//            
-//        }
-//    }
+    func initializeLocalPlayer()
+    {
+        let inputComp = GameInputComponent()
+        addComponent(inputComp, to: m_LocalPlayerControllerEntity)
+
+        let timestamp = TimeComponent(interval: CACurrentMediaTime())
+        addComponent(timestamp, to: m_LocalPlayerControllerEntity)
+        print("[" + #fileID + "]: " + #function + " -> Registered local player controller")
+    }
+    
+    func initializeControlledAvatar()
+    {
+        let transformComp = TransformComponent()
+        let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
+        let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
+        addComponents([transformComp, controlledByComp, avatarComp], to: m_AvatarEntity)
+        print("[" + #fileID + "]: " + #function + " -> Registered avatar")
+    }
+    
+    func getLocalPlayerID() -> UUID
+    {
+        return m_LocalPlayerControllerID
+    }
+    
+    func getControlledAvatarEntity() -> Entity
+    {
+        return m_AvatarEntity
+    }
+    
+    func clearAvatars()
+    {
+        AvatarManager.shared.removeAll()
+        
+        for (entity, components) in m_EntityComponentsByType
+        {
+            let foo = components.contains { (compType: ComponentTypeID, comp: any Component) in
+                return compType == AvatarComponent.typeID
+            }
+            
+            if foo
+            {
+                
+            }
+        }
+    }
      
     func addEntity(_ entity: Entity = Entity()) -> Entity?
     {
@@ -105,7 +151,7 @@ class EntityAdmin
     
     func removeAllEntities()
     {
-        AvatarManager.shared.removeAllAvatars()
+        AvatarManager.shared.removeAll()
         m_EntityComponentsByType.removeAll()
         m_ComponentsByType.removeAll()
     }

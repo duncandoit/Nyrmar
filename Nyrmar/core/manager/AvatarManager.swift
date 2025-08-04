@@ -50,7 +50,7 @@ class AvatarManager
         return Array(m_Avatars.values)
     }
     
-    func removeAllAvatars()
+    func removeAll()
     {
         m_Avatars.removeAll()
     }

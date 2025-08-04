@@ -13,6 +13,6 @@ class GameInputCleanupSystem: System
 
     func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
     {
-        EntityAdmin.shared.removeComponent(ofType: GameInputComponent.self, from: world.getControlledAvatarEntity())
+        EntityAdmin.shared.removeComponent(ofType: GameInputComponent.self, from: EntityAdmin.shared.getControlledAvatarEntity())
     }
 }
