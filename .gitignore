@@ -16,4 +16,5 @@
 
 # iOS/XCode related
 build
-xcuserdata/
+xcuserdata
+DerivedData
