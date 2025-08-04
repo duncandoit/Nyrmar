@@ -12,16 +12,16 @@ class GameInputManager
 {
     static let shared = GameInputManager()
     
-    var entity: Entity
+//    var entity: Entity
     
     private init()
     {
-        guard let inputEntity = EntityAdmin.shared.addEntity() else
-        {
-            fatalError(#function + ": An Entity could not be created for GameInputManager.")
-        }
-        
-        entity = inputEntity
+//        guard let inputEntity = EntityAdmin.shared.addEntity() else
+//        {
+//            fatalError(#function + ": An Entity could not be created for GameInputManager.")
+//        }
+//        
+//        entity = inputEntity
     }
 
     /// Adds newly created Components needed for input system to the Entity

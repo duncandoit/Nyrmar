@@ -18,7 +18,7 @@ class GameWorld: SKScene
     override func sceneDidLoad()
     {
         super.sceneDidLoad()
-        print(#function)
+        print("[" + #fileID + "]: " + #function)
         
         m_LastUpdateTime = 0
         EntityAdmin.shared.initializeScene(self)
@@ -42,16 +42,21 @@ class GameWorld: SKScene
     {
         m_AvatarEntity = EntityAdmin.shared.addEntity()
         
-        guard let _ = AvatarManager.shared.createAvatar(atTransform: TransformComponent(), with: m_AvatarEntity) else
-        {
-            print(#function + " - avatar wasn't created.")
-            return
-        }
-        
+        let transformComp = TransformComponent()
         let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
-        EntityAdmin.shared.addComponent(controlledByComp, to: m_AvatarEntity)
+//        let avatar = Avatar(textureName: "finalfall-logo", owningEntity: m_AvatarEntity, size: CGSizeMake(50, 50), position: .zero, zPosition: 1)
+//        AvatarManager.shared.addAvatar(avatar)
         
-//        addChild(avatar)
+        let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
+        EntityAdmin.shared.addComponents([transformComp, controlledByComp, avatarComp], to: m_AvatarEntity)
+        
+//        guard let _ = AvatarManager.shared.createAvatar(atTransform: transformComp, with: m_AvatarEntity) else
+//        {
+//            print("[" + #fileID + "]: " + #function + " -> avatar wasn't created.")
+//            return
+//        }
+        
+        //addChild(avatar)
     }
     
     func getLocalPlayerID() -> UUID

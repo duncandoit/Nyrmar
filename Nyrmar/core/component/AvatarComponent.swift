@@ -17,7 +17,7 @@ class AvatarComponent: Component
     var wantsToSpawn = true
     var wantsToBeDestroyed = false
 
-    init(avatar: Avatar, owningEntity: Entity, textureName: String)
+    init(avatar: Avatar?, owningEntity: Entity, textureName: String)
     {
         self.avatar = avatar
         self.owningEntity = owningEntity

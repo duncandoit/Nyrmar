@@ -19,19 +19,19 @@ class GameInputSystem: System
         let controlledByComp = component as! ControlledByComponent
         guard controlledByComp.controllerID == world.getLocalPlayerID() else
         {
-            print(#function + " - Not controlled by local player")
+            print("[" + #fileID + "]: " + #function + " -> Not controlled by local player")
             return
         }
         
         guard let inputComp = controlledByComp.sibling(GameInputComponent.self) else
         {
-            print(#function + " - No input given to controlled Entity.")
+            //print("[" + #fileID + "]: " + #function + " -> No input given to controlled Entity.")
             return
         }
         
         guard let transformComp = inputComp.sibling(TransformComponent.self) else
         {
-            print(#function + " - Controllable Entity does not have a TransformComponent.")
+            print("[" + #fileID + "]: " + #function + " -> Controllable Entity does not have a TransformComponent.")
             return
         }
 
@@ -46,10 +46,11 @@ class GameInputSystem: System
         // Modify the transform of the entity with this inputComp
         guard let pos = inputComp.touchLocation else
         {
-            print(#function + " - GameInputComponent had a nil touch event")
+            print("[" + #fileID + "]: " + #function + " -> GameInputComponent had a nil touch event")
             return
         }
         
         transformComp.position = pos
+        //print("[" + #fileID + "]: " + #function + " -> Moved entity to (\(pos.x), \(pos.y))")
     }
 }

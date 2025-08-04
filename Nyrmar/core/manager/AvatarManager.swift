@@ -19,7 +19,7 @@ class AvatarManager
     {
         guard m_Avatars[owningEntity] == nil else
         {
-            print(#function + " - Avatar already exists for Entity: \(owningEntity).")
+            print("[" + #fileID + "]: " + #function + " -> Avatar already exists for Entity: \(owningEntity).")
             return nil
         }
         let avatar = Avatar(
@@ -31,8 +31,13 @@ class AvatarManager
         )
         
         m_Avatars[owningEntity] = avatar
-        print(#function + " - Spawned Avatar for Entity: \(owningEntity).")
+        print("[" + #fileID + "]: " + #function + " -> Spawned Avatar for Entity: \(owningEntity).")
         return avatar
+    }
+    
+    func addAvatar(_ avatar: Avatar)
+    {
+        m_Avatars[avatar.owningEntity] = avatar
     }
     
     func avatar(for entity: Entity) -> Avatar?

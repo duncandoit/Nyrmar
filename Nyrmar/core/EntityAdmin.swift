@@ -25,28 +25,28 @@ class EntityAdmin
         EntityAdmin.hasInitialized = true
         
         m_Systems = [
-            // TargetName
-            // LifetimeEntity
+                // TargetName
+                // LifetimeEntity
             GameInputSystem(),
-            // Behavior
-            // AimAtTarget
-            // MouseCursorFollow
+                // Behavior
+                // AimAtTarget
+                // MouseCursorFollow
             ParametricMovementSystem(),
-            // PlatformerPlayerController
-            // WallCrawler
-            // RaycastMovement
-            // Physics
-            // Grounded
-            // Health
-            // Socket
-            // Attach
-            // Camera
-            // DebugEntity
-            // ImageAnimation
+                // PlatformerPlayerController
+                // WallCrawler
+                // RaycastMovement
+                // Physics
+                // Grounded
+                // Health
+                // Socket
+                // Attach
+                // Camera
+                // DebugEntity
+                // ImageAnimation
             RenderSyncSystem(),
             SpawnSystem(),
-        //    LifeSpanSystem(),
-            // SpawnOnDestroy
+            //LifeSpanSystem(),
+                // SpawnOnDestroy
             GameInputCleanupSystem()
         ]
     }
@@ -76,12 +76,12 @@ class EntityAdmin
     {
         guard m_EntityComponentsByType[entity] == nil else
         {
-            print(#function + " - Entity:\(entity) already exists.")
+            print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) already exists.")
             return nil
         }
         
         m_EntityComponentsByType[entity] = [:]
-        print(#function + " - Entity:\(entity) added.\n")
+        print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) added.\n")
         return entity
     }
     
@@ -89,7 +89,7 @@ class EntityAdmin
     {
         guard let components = m_EntityComponentsByType.removeValue(forKey: entity) else
         {
-            print(#function + " - Entity:\(entity) does not exist.")
+            print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) does not exist.")
             return
         }
         
@@ -119,13 +119,15 @@ class EntityAdmin
     {
         guard var components = m_EntityComponentsByType[entity] else
         {
-            print(#function + " - Entity:\(entity) does not exist.")
+            print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) does not exist.")
             return
         }
         
         components[component.typeID()] = component
         m_EntityComponentsByType[entity] = components
         m_ComponentsByType[component.typeID(), default: []].append(component)
+        print("[" + #fileID + "]: " + #function + " -> Component of type: \(String(describing: component))(id:\(component.typeID())) added.")
+        
         updateSiblingReferences(for: entity)
     }
     
@@ -146,13 +148,13 @@ class EntityAdmin
     {
         guard var components = m_EntityComponentsByType[entity] else
         {
-            print(#function + " - Entity:\(entity) does not exist.")
+            print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) does not exist.")
             return
         }
         
         guard let removed = components.removeValue(forKey: T.typeID) else
         {
-            print(#function + " - Component not found on Entity:\(entity).")
+            print("[" + #fileID + "]: " + #function + " -> Component not found on Entity:\(entity).")
             return
         }
                 
@@ -171,7 +173,7 @@ class EntityAdmin
     {
         guard let components = m_EntityComponentsByType[entity] else
         {
-            print(#function + " -  Entity not found: \(entity).")
+            print("[" + #fileID + "]: " + #function + " ->  Entity not found: \(entity).")
             return
         }
         
@@ -186,22 +188,25 @@ class EntityAdmin
     {
         guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
         {
-            print(#function + " - Avatar with owningEntity: \(owningEntity) not found.")
+            print("[" + #fileID + "]: " + #function + " -> Avatar with owningEntity: \(owningEntity) not found.")
             return
         }
         
         avatar.removeFromParent()
-        print(#function + " - Removed Avatar with owningEntity: \(owningEntity).")
+        print("[" + #fileID + "]: " + #function + " -> Removed Avatar with owningEntity: \(owningEntity).")
     }
     
     func tick(deltaTime: TimeInterval)
     {
+        print("[" + #fileID + "]: " + #function + " -> Entity count:    \(m_EntityComponentsByType.keys.count).")
+        print("[" + #fileID + "]: " + #function + " -> Component count: \(m_ComponentsByType.count).")
+        
         for system in m_Systems
         {
             let componentTypeID = system.requiredComponent
             guard let components = m_ComponentsByType[componentTypeID] else
             {
-                print(#function + " - Component does not exist for type:\(componentTypeID).");
+                //print("[" + #fileID + "]: " + #function + " -> Component does not exist for type:\(String(describing: component)).");
                 continue
             }
 

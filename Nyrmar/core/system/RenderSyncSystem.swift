@@ -16,13 +16,13 @@ class RenderSyncSystem: System
         let avatarComp = component as! AvatarComponent
         guard let transformComp = avatarComp.sibling(TransformComponent.self) else
         {
-            print(#function, "Could not find TransformComponent for AvatarComponent")
+            print("[" + #fileID + "]: " + #function, "Could not find TransformComponent for AvatarComponent")
             return
         }
         
         guard let avatar = avatarComp.avatar else
         {
-            print(#function, "Could not find Avatar reference in AvatarComponent")
+            print("[" + #fileID + "]: " + #function, "Could not find Avatar reference in AvatarComponent")
             return
         }
         
