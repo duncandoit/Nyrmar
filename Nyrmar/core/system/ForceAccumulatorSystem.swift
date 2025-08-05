@@ -20,13 +20,20 @@ class ForceAccumulatorSystem: System
         {
             return
         }
+        
+        var totalForce: CGVector = forceComp.impulse
+        
+        if forceComp.gravityEnabled
+        {
+            totalForce.dy -= forceComp.gravityStrength
+        }
+        
+        // Net acceleration = externalForce + potential gravity
+        totalForce.dx /= physicsComp.mass
+        totalForce.dy /=  physicsComp.mass
 
-        // Net acceleration = externalForce + gravity
-        let totalAX = forceComp.impulse.dx / physicsComp.mass
-        let totalAY = (forceComp.impulse.dy - forceComp.gravityStrength) / physicsComp.mass
-
-        physicsComp.velocity.dx += totalAX * CGFloat(deltaTime)
-        physicsComp.velocity.dy += totalAY * CGFloat(deltaTime)
+        physicsComp.velocity.dx += totalForce.dx * CGFloat(deltaTime)
+        physicsComp.velocity.dy += totalForce.dy * CGFloat(deltaTime)
         
         forceComp.impulse = .zero
     }

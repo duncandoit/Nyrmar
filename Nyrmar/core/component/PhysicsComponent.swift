@@ -16,6 +16,9 @@ class PhysicsComponent: Component
     var velocity: CGVector = .zero
     var mass: CGFloat = 1.0
     
+    /// Linear decay rate (per second). 0 = no drag; e.g. 0.1 slows by 10% each second.
+    var decay: CGFloat = 0.5
+    
     init(mass: CGFloat = 1.0)
     {
         self.mass = mass

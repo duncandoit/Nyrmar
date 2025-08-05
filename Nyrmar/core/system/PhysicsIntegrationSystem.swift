@@ -20,6 +20,14 @@ class PhysicsIntegrationSystem: System
         {
             return
         }
+        
+        // Apply linear decay (drag): v *= max(0, 1 - decay * dt)
+        if physicsComp.decay > 0
+        {
+            let factor = max(0, 1 - physicsComp.decay * CGFloat(deltaTime))
+            physicsComp.velocity.dx *= factor
+            physicsComp.velocity.dy *= factor
+        }
 
         transformComp.position.x += physicsComp.velocity.dx * CGFloat(deltaTime)
         transformComp.position.y += physicsComp.velocity.dy * CGFloat(deltaTime)

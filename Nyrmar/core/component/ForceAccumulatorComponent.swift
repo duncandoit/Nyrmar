@@ -15,12 +15,14 @@ class ForceAccumulatorComponent: Component
     
     /// Downward gravitational acceleration
     var gravityStrength: CGFloat
+    var gravityEnabled: Bool
     
     /// Other applied forces
     var impulse: CGVector = .zero
     
-    init(gravityStrength: CGFloat = 9.8)
+    init(gravityStrength: CGFloat = 9.8, gravityEnabled: Bool = true)
     {
         self.gravityStrength = gravityStrength
+        self.gravityEnabled = gravityEnabled
     }
 }

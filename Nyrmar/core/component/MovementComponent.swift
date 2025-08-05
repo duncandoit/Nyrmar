@@ -15,6 +15,7 @@ class MovementComponent: Component
     
     var destination: CGPoint?
     var moveSpeed: CGFloat
+    var destinationThreshold: CGFloat = 1.0
     
     init(moveSpeed: CGFloat = 200.0, destination: CGPoint? = nil)
     {

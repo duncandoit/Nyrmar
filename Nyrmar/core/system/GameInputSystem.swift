@@ -80,22 +80,13 @@ class GameInputSystem: System
         
         if inputComp.pressedInputs.contains(.touchUp)
         {
-            guard let forceComp = movementComp.sibling(ForceAccumulatorComponent.self) else
-            {
-                return
-            }
+            guard let forceComp = movementComp.sibling(ForceAccumulatorComponent.self) else { return }
             
-            guard let transformComp = forceComp.sibling(TransformComponent.self) else
-            {
-                return
-            }
+            guard let transformComp = forceComp.sibling(TransformComponent.self) else { return }
             
             // Get the current position and the target position:
             let currentPos = transformComp.position
-            guard let targetPos = movementComp.destination else
-            {
-                return
-            }
+            guard let targetPos = movementComp.destination else { return }
 
             // Compute the raw vector pointing from target → entity:
             let rawX = currentPos.x - targetPos.x
@@ -108,7 +99,7 @@ class GameInputSystem: System
             let dirY = rawY / distance
 
             // Choose your impulse strength (units: force)
-            let impulseStrength: CGFloat = 100.0
+            let impulseStrength: CGFloat = 800.0
 
             // Build the impulse vector “away” from the target:
             let impulse = CGVector(dx: dirX * impulseStrength, dy: dirY * impulseStrength)

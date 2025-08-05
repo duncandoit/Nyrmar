@@ -31,7 +31,7 @@ class MovementExertionSystem: System
         let dy = destination.y - transformComp.position.y
         let dist = hypot(dx, dy)
         
-        guard dist > 0.1 else
+        guard dist > movementComp.destinationThreshold else
         {
             movementComp.destination = nil
             return
