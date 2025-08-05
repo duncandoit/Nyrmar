@@ -42,6 +42,7 @@
 				core/system/GameInputCleanupSystem.swift,
 				core/system/GameInputSystem.swift,
 				core/system/ParametricMovementSystem.swift,
+				core/system/PhysicsSystem.swift,
 				core/system/RenderSyncSystem.swift,
 				core/system/SpawnSystem.swift,
 			);

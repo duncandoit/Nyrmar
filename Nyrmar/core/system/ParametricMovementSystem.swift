@@ -14,20 +14,29 @@ class ParametricMovementSystem: System
 
     func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
     {
-        let moveComp = component as! ParametricMovementComponent
-        guard let transformComp = moveComp.sibling(TransformComponent.self) else
+        let movementComp = component as! ParametricMovementComponent
+        guard let transformComp = movementComp.sibling(TransformComponent.self) else
         {
-            print("[" + #fileID + "]: " + #function + " -> Missing TransformComponent for \(moveComp)")
+            print("[" + #fileID + "]: " + #function + " -> Missing TransformComponent for \(String(describing: movementComp))")
             return
         }
 
-        moveComp.elapsedTime += deltaTime
-        let t = CGFloat(moveComp.elapsedTime)
+        // Advance elapsed time
+        movementComp.elapsedTime += deltaTime
+        let t = CGFloat(movementComp.elapsedTime)
 
-        let dx = moveComp.amplitude.dx * sin(moveComp.frequency * t + moveComp.phase)
-        let dy = moveComp.amplitude.dy * cos(moveComp.frequency * t + moveComp.phase)
+        // Compute parametric offset (sinusoidal motion)
+        let offsetX = movementComp.amplitude.dx * sin(movementComp.frequency * t + movementComp.phase)
+        let offsetY = movementComp.amplitude.dy * cos(movementComp.frequency * t + movementComp.phase)
+        let movementOffset = CGVector(dx: offsetX, dy: offsetY)
 
-        transformComp.position.x += dx
-        transformComp.position.y += dy
+        // Update transform by combining both offsets
+        transformComp.position.x += movementOffset.dx
+        transformComp.position.y += movementOffset.dy
     }
 }
+
+
+
+
+

@@ -18,7 +18,7 @@ class SpawnSystem: System
         let avatarComp = component as! AvatarComponent
         guard avatarComp.wantsToSpawn else
         {
-            print("[" + #fileID + "]: " + #function + " -> Avatar does not want to spawn.")
+            //print("[" + #fileID + "]: " + #function + " -> Avatar does not want to spawn.")
             return
         }
         
@@ -34,6 +34,7 @@ class SpawnSystem: System
             return
         }
         
+        avatarComp.wantsToSpawn = false
         avatarComp.avatar = avatar
         world.addChild(avatar)
     }

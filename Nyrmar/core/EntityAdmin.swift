@@ -39,7 +39,7 @@ class EntityAdmin
                 // PlatformerPlayerController
                 // WallCrawler
                 // RaycastMovement
-                // Physics
+            PhysicsSystem(),
                 // Grounded
                 // Health
                 // Socket
@@ -78,7 +78,10 @@ class EntityAdmin
     {
         let transformComp = TransformComponent()
         let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
-        m_AvatarEntity = addEntity(with: transformComp, controlledByComp)
+        let movementComp = ParametricMovementComponent(amplitude: .zero, frequency: .zero)
+        let physicsComp = PhysicsComponent(velocity: .zero)
+        let curveComp = CurveComponent(curveType: .easeIn)
+        m_AvatarEntity = addEntity(with: transformComp, controlledByComp, movementComp, physicsComp, curveComp)
         
         let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
         addComponent(avatarComp, to: m_AvatarEntity)
@@ -131,6 +134,10 @@ class EntityAdmin
             fatalError("[" + #fileID + "]: " + #function + " -> No sibling container found for Anchor Component for Entity:\(entity).")
         }
         
+        var debugMessage = "[" + #fileID + "]: " + #function + " -> Entity:\(entity) removed.\n"
+        debugMessage += "  Removing \(siblings.refs.count) siblings:\n"
+        
+        
         for (typeID, weakRef) in siblings.refs
         {
             guard let sibling = weakRef.value else
@@ -139,6 +146,8 @@ class EntityAdmin
                 // main Components collection. It also can't be used to compare now anyway.
                 continue
             }
+            
+            debugMessage += "    \(String(describing: sibling))\n"
             
             if var sameTypeComps = m_ComponentsByType[typeID]
             {
@@ -276,6 +285,7 @@ class EntityAdmin
         
         // Remove from shared sibling container
         m_EntityAnchors[entity]?.siblings?.refs.removeValue(forKey: removedID)
+        print("[" + #fileID + "]: " + #function + " -> Removed Component:\(String(describing: type)) from Entity:\(entity).")
     }
     
     func removeAvatar(with owningEntity: Entity)
@@ -292,8 +302,8 @@ class EntityAdmin
     
     func tick(deltaTime: TimeInterval)
     {
-        //print("[" + #fileID + "]: " + #function + " -> Entity count:    \(m_EntityComponentsByType.keys.count).")
-        //print("[" + #fileID + "]: " + #function + " -> Component count: \(m_ComponentsByType.count).")
+        //print("[" + #fileID + "]: " + #function + " -> Entity count:    \(allEntities().count).")
+        print("[" + #fileID + "]: " + #function + " -> Component count: \(m_ComponentsByType.count).")
         
         for system in m_Systems
         {
