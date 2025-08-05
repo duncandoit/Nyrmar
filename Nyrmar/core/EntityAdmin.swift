@@ -35,11 +35,13 @@ class EntityAdmin
                 // Behavior
                 // AimAtTarget
                 // MouseCursorFollow
+            MovementSystem(),
             ParametricMovementSystem(),
                 // PlatformerPlayerController
                 // WallCrawler
                 // RaycastMovement
-            PhysicsSystem(),
+            ForceAccumulatorSystem(),
+            PhysicsIntegrationSystem(),
                 // Grounded
                 // Health
                 // Socket
@@ -78,10 +80,11 @@ class EntityAdmin
     {
         let transformComp = TransformComponent()
         let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
-        let movementComp = ParametricMovementComponent(amplitude: .zero, frequency: .zero)
-        let physicsComp = PhysicsComponent(velocity: .zero)
+        let movementComp = MovementComponent(moveSpeed: 50.0, destination: nil)
+        let physicsComp = PhysicsComponent()
+        let forceComp = ForceAccumulatorComponent()
         let curveComp = CurveComponent(curveType: .easeIn)
-        m_AvatarEntity = addEntity(with: transformComp, controlledByComp, movementComp, physicsComp, curveComp)
+        m_AvatarEntity = addEntity(with: transformComp, controlledByComp, movementComp, physicsComp, forceComp, curveComp)
         
         let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
         addComponent(avatarComp, to: m_AvatarEntity)
@@ -286,6 +289,23 @@ class EntityAdmin
         // Remove from shared sibling container
         m_EntityAnchors[entity]?.siblings?.refs.removeValue(forKey: removedID)
         print("[" + #fileID + "]: " + #function + " -> Removed Component:\(String(describing: type)) from Entity:\(entity).")
+    }
+    
+    /// Associate a new component as a sibling to an existing component on the same entity. Slow.
+    func addSibling(_ component: Component, to existingComponent: Component)
+    {
+        // Locate the entity owning existingComponent by checking anchors
+        for (entityId, anchorComp) in m_EntityAnchors
+        {
+            if let siblings = anchorComp.siblings?.refs.values.contains(where: { $0.value === existingComponent })
+            {
+                // Delegate full registration to the main addComponent
+                addComponent(component, to: entityId)
+                return
+            }
+        }
+        
+        fatalError("[" + #fileID + "]: " + #function + " -> Component is not registered with an Entity so cannot be linked with a sibling.")
     }
     
     func removeAvatar(with owningEntity: Entity)

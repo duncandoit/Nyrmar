@@ -18,7 +18,7 @@ class ParametricMovementComponent: Component
     var frequency: CGFloat
     var phase: CGFloat
     var elapsedTime: TimeInterval = 0.0
-    var moveSpeed: CGFloat = 5.5
+    var moveSpeed: CGFloat = 50.5
 
     init(amplitude: CGVector, frequency: CGFloat, phase: CGFloat = 0.0)
     {

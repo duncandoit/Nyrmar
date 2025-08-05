@@ -70,43 +70,52 @@ class GameInputSystem: System
             return
         }
         
-        guard let transformComp = inputComp.sibling(TransformComponent.self) else
+        guard let movementComp = inputComp.sibling(MovementComponent.self) else
         {
-            print("[" + #fileID + "]: " + #function + " -> Controllable Entity does not have a TransformComponent.")
+            print("[" + #fileID + "]: " + #function + " -> Controllable Entity does not have a MovementComponent.")
             return
         }
         
-        guard let movementComp = inputComp.sibling(ParametricMovementComponent.self) else
-        {
-            print("[" + #fileID + "]: " + #function + " -> Controllable Entity does not have a ParametricMovementComponent.")
-            return
-        }
-
-        guard let targetLocation = inputComp.touchLocation else
-        {
-            print("[" + #fileID + "]: " + #function + " -> GameInputComponent had a nil touch event")
-            return
-        }
-
-        // Direction calculation
-        let currentPos = transformComp.position
-        let dx = targetLocation.x - currentPos.x
-        let dy = targetLocation.y - currentPos.y
-        let distance = hypot(dx, dy)
-        guard distance > 0.1 else { return }
+        movementComp.destination = inputComp.touchLocation
         
-        let direction = CGVector(dx: dx / distance, dy: dy / distance)
+        if inputComp.pressedInputs.contains(.touchUp)
+        {
+            guard let forceComp = movementComp.sibling(ForceAccumulatorComponent.self) else
+            {
+                return
+            }
+            
+            guard let transformComp = forceComp.sibling(TransformComponent.self) else
+            {
+                return
+            }
+            
+            // Get the current position and the target position:
+            let currentPos = transformComp.position
+            guard let targetPos = movementComp.destination else
+            {
+                return
+            }
 
-        // Use moveSpeed from component
-        let movementVector = CGVector(
-            dx: direction.dx * movementComp.moveSpeed * CGFloat(deltaTime),
-            dy: direction.dy * movementComp.moveSpeed * CGFloat(deltaTime)
-        )
+            // Compute the raw vector pointing from target → entity:
+            let rawX = currentPos.x - targetPos.x
+            let rawY = currentPos.y - targetPos.y
+            let distance = hypot(rawX, rawY)
 
-        // Configure movement component
-        movementComp.amplitude = movementVector
-        movementComp.frequency = 1.0
-        movementComp.phase = 0.0
-        movementComp.elapsedTime = 0.0
+            // Normalize (guard against zero-distance):
+            guard distance > 0 else { return }
+            let dirX = rawX / distance
+            let dirY = rawY / distance
+
+            // Choose your impulse strength (units: force)
+            let impulseStrength: CGFloat = 100.0
+
+            // Build the impulse vector “away” from the target:
+            let impulse = CGVector(dx: dirX * impulseStrength, dy: dirY * impulseStrength)
+
+            // Apply it to the ForceAccumulatorComponent
+            forceComp.impulse.dx += impulse.dx
+            forceComp.impulse.dy += impulse.dy
+        }
     }
 }

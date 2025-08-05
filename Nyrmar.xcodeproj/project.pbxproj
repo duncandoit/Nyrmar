@@ -39,10 +39,12 @@
 				core/entity/ShapeEntity.swift,
 				core/GameWorld.swift,
 				core/manager/AvatarManager.swift,
+				core/system/ForceAccumulatorSystem.swift,
 				core/system/GameInputCleanupSystem.swift,
 				core/system/GameInputSystem.swift,
+				core/system/MovementSystem.swift,
 				core/system/ParametricMovementSystem.swift,
-				core/system/PhysicsSystem.swift,
+				core/system/PhysicsIntegrationSystem.swift,
 				core/system/RenderSyncSystem.swift,
 				core/system/SpawnSystem.swift,
 			);
