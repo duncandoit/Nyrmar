@@ -8,7 +8,7 @@
 import Foundation
 
 /// System for target-based movement
-class MovementSystem: System
+class MovementExertionSystem: System
 {
     let requiredComponent: ComponentTypeID = MovementComponent.typeID
     

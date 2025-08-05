@@ -1,5 +1,5 @@
 //
-//  RenderSyncSystem.swift
+//  AvatarSyncSystem.swift
 //  Nyrmar
 //
 //  Created by Zachary Duncan on 8/1/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class RenderSyncSystem: System
+class AvatarSyncSystem: System
 {
     let requiredComponent: ComponentTypeID = AvatarComponent.typeID
 
