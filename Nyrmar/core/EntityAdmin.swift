@@ -10,33 +10,52 @@ import GameplayKit
 
 class EntityAdmin
 {
-    private var m_EntityAnchors: [Entity: Component] = [:]
+    
+    
+    /// The canonical collection of all Components
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
+    
+    /// Reverse map for efficient Component -> Entity lookup
+    private var m_EntitiesByComponent: [ObjectIdentifier: Entity] = [:]
+    
+    /// Map for efficient Entity -> Component lookup
+    private var m_ComponentByEntity: [Entity: Component] = [:]
+    
     private var m_Systems: [System]
     private var m_World: GameWorld!
     
+    // Start Debug properties
     private let m_LocalPlayerControllerID: UUID
     private var m_LocalPlayerControllerEntity: Entity!
     private var m_AvatarEntity: Entity!
+    // End Debug properties
     
-    private static var hasInitialized = false
     static var shared: EntityAdmin = EntityAdmin()
     
     private init()
     {
-        precondition(!EntityAdmin.hasInitialized, "Error: EntityAdmin should only ever be initialized once.")
-        EntityAdmin.hasInitialized = true
         m_LocalPlayerControllerID = UUID()
         
         m_Systems = [
+            GameInputSystem(),
                 // TargetName
                 // LifetimeEntity
-            GameInputSystem(),
+                // Path data invalidate
+                // Fixed update
                 // Behavior
                 // AimAtTarget
                 // MouseCursorFollow
-            MovementSystem(),
+                // Path data
+                // AI Strategic
+                // AI path find
+                // AI behavior
+                // AI Spawn
+                // AI movement
+                // Unsynchronized movement
+                // Movement state
+            MovementExertionSystem(),
             ParametricMovementSystem(),
+                // AI perception
                 // PlatformerPlayerController
                 // WallCrawler
                 // RaycastMovement
@@ -49,7 +68,7 @@ class EntityAdmin
                 // Camera
                 // DebugEntity
                 // ImageAnimation
-            RenderSyncSystem(),
+            AvatarSyncSystem(),
             SpawnSystem(),
             //LifeSpanSystem(),
                 // SpawnOnDestroy
@@ -127,7 +146,7 @@ class EntityAdmin
     func removeEntity(_ entity: Entity)
     {
         // Remove anchor and all its siblings from type index
-        guard let anchorComp = m_EntityAnchors.removeValue(forKey: entity) else
+        guard let anchorComp = m_ComponentByEntity.removeValue(forKey: entity) else
         {
             fatalError("[" + #fileID + "]: " + #function + " -> Anchor Component for Entity:\(entity) not found.")
         }
@@ -140,7 +159,6 @@ class EntityAdmin
         var debugMessage = "[" + #fileID + "]: " + #function + " -> Entity:\(entity) removed.\n"
         debugMessage += "  Removing \(siblings.refs.count) siblings:\n"
         
-        
         for (typeID, weakRef) in siblings.refs
         {
             guard let sibling = weakRef.value else
@@ -152,46 +170,29 @@ class EntityAdmin
             
             debugMessage += "    \(String(describing: sibling))\n"
             
-            if var sameTypeComps = m_ComponentsByType[typeID]
-            {
-                // Remove any that are identical to our sibling
-                sameTypeComps.removeAll { $0 === sibling }
-                m_ComponentsByType[typeID] = sameTypeComps.isEmpty ? nil : sameTypeComps
-            }
+            removeComponentType(typeID , from: entity)
         }
+        
+        print(debugMessage)
     }
 
-    /// Remove the entity that owns the given component. Slow.
+    /// Remove the entity that owns the given component.
     func removeEntity(ofComponent component: Component)
     {
-        // Check if component is an anchor
-        if let (entity, _) = m_EntityAnchors.first(where: { $0.value === component })
+        guard let entity = getEntity(forComponent: component) else
         {
-            removeEntity(entity)
+            print("[" + #fileID + "]: " + #function + " -> No Entity found for Component:\(component)")
             return
         }
         
-        // Otherwise search siblings in anchors
-        for (entity, anchor) in m_EntityAnchors
-        {
-            guard let siblings = anchor.siblings else
-            {
-                fatalError("[" + #fileID + "]: " + #function + " -> No sibling container found for Anchor Component for Entity:\(entity).")
-            }
-            
-            if siblings.refs.values.contains(where: { $0.value === component })
-            {
-                removeEntity(entity)
-                return
-            }
-        }
+        removeEntity(entity)
     }
     
     /// Remove all entities that have a component of the given type. Slow.
     func removeEntitiesWith(componentType typeID: ComponentTypeID)
     {
         // Find all entities whose sibling container contains this component type
-        let entitiesToRemove = m_EntityAnchors.compactMap { (entity, anchor) -> Entity? in
+        let entitiesToRemove = m_ComponentByEntity.compactMap { (entity, anchor) -> Entity? in
             if let refs = anchor.siblings?.refs, refs.keys.contains(typeID)
             {
                 return entity
@@ -210,18 +211,24 @@ class EntityAdmin
     func removeAllEntities()
     {
         AvatarManager.shared.removeAll()
-        m_EntityAnchors.removeAll()
+        m_ComponentByEntity.removeAll()
         m_ComponentsByType.removeAll()
+    }
+    
+    /// Returns the Entity that this Component belongs to (if any).
+    func getEntity(forComponent component: Component) -> Entity?
+    {
+        return m_EntitiesByComponent[ObjectIdentifier(component)]
     }
     
     func allEntities() -> [Entity: Component]
     {
-        return m_EntityAnchors
+        return m_ComponentByEntity
     }
     
     func addComponent(_ component: Component, to entity: Entity)
     {
-        if let anchorComp = m_EntityAnchors[entity]
+        if let anchorComp = m_ComponentByEntity[entity]
         {
             // Link into existing sibling container
             guard let siblings = anchorComp.siblings else
@@ -237,11 +244,15 @@ class EntityAdmin
             let siblings = SiblingContainer()
             siblings.refs[component.typeID()] = WeakComponentRef(component)
             component.siblings = siblings
-            m_EntityAnchors[entity] = component
+            m_ComponentByEntity[entity] = component
         }
         
         // Register in type-based index
         m_ComponentsByType[component.typeID(), default: []].append(component)
+        
+        // record reverse mapping
+        m_EntitiesByComponent[ObjectIdentifier(component)] = entity
+        
         print("[" + #fileID + "]: " + #function + " -> Component type \(String(describing: component)) added to Entity:\(entity)")
     }
     
@@ -252,60 +263,78 @@ class EntityAdmin
     
     func getComponent<T: Component>(for entity: Entity) -> T?
     {
-        return m_EntityAnchors[entity]?.sibling(T.self)
+        return m_ComponentByEntity[entity]?.sibling(T.self)
     }
     
-    func removeComponent<T: Component>(ofType type: T.Type, from entity: Entity)
+    func removeComponentType(_ componentID: ComponentTypeID, from entity: Entity)
     {
-        guard let anchorComp = m_EntityAnchors[entity] else
+        guard let anchorComp = m_ComponentByEntity[entity] else
         {
             print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) does not exist.")
             return
         }
-            
-        let removedID = type.typeID
         
-        // Remove from type index
-        if var list = m_ComponentsByType[removedID]
+        guard let siblings = anchorComp.siblings else
         {
-            list.removeAll { $0.typeID() == removedID }
-            m_ComponentsByType[removedID] = list.isEmpty ? nil : list
+            print("[" + #fileID + "]: " + #function + " -> Anchor Component for Entity:\(entity) does not have a sibling container.")
+            return
         }
-        
-        // If removing the anchor, promote a sibling or drop entity
-        if anchorComp.typeID() == removedID
+
+        guard let weakSibling = siblings.refs[componentID] else
         {
-            if let (_, ref) = anchorComp.siblings?.refs.first(where: { $0.key != removedID })
+            print("[" + #fileID + "]: " + #function + " -> Sibling of type \(String(describing: componentID)) for Entity:\(entity) is not found.")
+            return
+        }
+              
+        guard let sibling = weakSibling.value else
+        {
+            print("[" + #fileID + "]: " + #function + " -> Component of type \(String(describing: componentID)) on Entity:\(entity) is nil.")
+            return
+        }
+
+        // Remove from the global type‐index
+        if var sameTypeComponents = m_ComponentsByType[componentID]
+        {
+            sameTypeComponents.removeAll { $0 === sibling }
+            m_ComponentsByType[componentID] = sameTypeComponents.isEmpty ? nil : sameTypeComponents
+        }
+
+        // Remove the reverse‐lookup entry
+        m_EntitiesByComponent.removeValue(forKey: ObjectIdentifier(sibling))
+
+        // If we removed the anchor, promote another sibling (or drop the entity)
+        if sibling === anchorComp
+        {
+            // Try to pick any other sibling as new anchor
+            if let (_, newRef) = siblings.refs.first(where: { $0.key != componentID }),
+               let newAnchor = newRef.value
             {
-                m_EntityAnchors[entity] = ref.value
+                m_ComponentByEntity[entity] = newAnchor
             }
             else
             {
-                m_EntityAnchors.removeValue(forKey: entity)
+                // No siblings left → entity no longer exists
+                m_ComponentByEntity.removeValue(forKey: entity)
                 return
             }
         }
+
+        // Remove from the shared sibling container
+        siblings.refs.removeValue(forKey: componentID)
         
-        // Remove from shared sibling container
-        m_EntityAnchors[entity]?.siblings?.refs.removeValue(forKey: removedID)
-        print("[" + #fileID + "]: " + #function + " -> Removed Component:\(String(describing: type)) from Entity:\(entity).")
+        print("[" + #fileID + "]: " + #function + " -> Removed Component:\(String(describing: componentID)) from Entity:\(entity).")
     }
     
-    /// Associate a new component as a sibling to an existing component on the same entity. Slow.
+    /// Add a new component as a sibling to an existing component and the same entity.
     func addSibling(_ component: Component, to existingComponent: Component)
     {
-        // Locate the entity owning existingComponent by checking anchors
-        for (entityId, anchorComp) in m_EntityAnchors
+        guard let entity = getEntity(forComponent: existingComponent) else
         {
-            if let siblings = anchorComp.siblings?.refs.values.contains(where: { $0.value === existingComponent })
-            {
-                // Delegate full registration to the main addComponent
-                addComponent(component, to: entityId)
-                return
-            }
+            print("[" + #fileID + "]: " + #function + " -> Component is not registered with an Entity so cannot be linked with a sibling.")
+            return
         }
         
-        fatalError("[" + #fileID + "]: " + #function + " -> Component is not registered with an Entity so cannot be linked with a sibling.")
+        addComponent(component, to: entity)
     }
     
     func removeAvatar(with owningEntity: Entity)
