@@ -25,17 +25,15 @@ class EntityAdmin
     private var m_World: GameWorld!
     
     // Start Debug properties
-    private let m_LocalPlayerControllerID: UUID
     private var m_LocalPlayerControllerEntity: Entity!
     private var m_AvatarEntity: Entity!
+    private weak var m_CachedLocalPlayerControllerComponent: ControllerComponent?
     // End Debug properties
     
     static let shared: EntityAdmin = EntityAdmin()
     
     private init()
     {
-        m_LocalPlayerControllerID = UUID()
-        
         m_Systems = [
             GameInputSystem(),
                 // TargetName
@@ -65,7 +63,7 @@ class EntityAdmin
                 // Health
                 // Socket
                 // Attach
-                // Camera
+            CameraSystem(),
                 // DebugEntity
                 // ImageAnimation
             AvatarSyncSystem(),
@@ -91,14 +89,15 @@ class EntityAdmin
     {
         let inputComp = GameInputComponent()
         let timestamp = TimeComponent(interval: CACurrentMediaTime())
-        m_LocalPlayerControllerEntity = addEntity(with: inputComp, timestamp)
+        let controller = ControllerComponent()
+        m_LocalPlayerControllerEntity = addEntity(with: inputComp, timestamp, controller)
         print("[" + #fileID + "]: " + #function + " -> Registered local player controller")
     }
     
     func initializeControlledAvatar()
     {
         let transformComp = TransformComponent()
-        let controlledByComp = ControlledByComponent(controllerID: m_LocalPlayerControllerID)
+        let controlledByComp = ThrallComponent(controllerID: nil)
         let movementComp = MovementComponent(moveSpeed: 50.0, destination: nil)
         let physicsComp = PhysicsComponent()
         let forceComp = ForceAccumulatorComponent()
@@ -110,9 +109,25 @@ class EntityAdmin
         print("[" + #fileID + "]: " + #function + " -> Registered avatar")
     }
     
-    func getLocalPlayerID() -> UUID
+    func getLocalPlayerControllerID() -> UUID?
     {
-        return m_LocalPlayerControllerID
+        if let localPlayerController = m_CachedLocalPlayerControllerComponent
+        {
+            return localPlayerController.controllerID
+        }
+        else
+        {
+            if let controllerEntity: Entity = getEntities(withComponentType: ControllerComponent.typeID)?.first
+            {
+                let newLocalPlayerControllerComponent = getComponent(ofType: ControllerComponent.self, from: controllerEntity)
+                m_CachedLocalPlayerControllerComponent = newLocalPlayerControllerComponent
+                return newLocalPlayerControllerComponent?.controllerID
+            }
+            else
+            {
+                return nil
+            }
+        }
     }
     
     func getControlledAvatarEntity() -> Entity
@@ -219,6 +234,27 @@ class EntityAdmin
         return m_EntitiesByComponent[ObjectIdentifier(component)]
     }
     
+    func getEntities(withComponentType componentID: ComponentTypeID) -> [Entity]?
+    {
+        guard let components = m_ComponentsByType[componentID] else
+        {
+            return nil
+        }
+        
+        var entities: [Entity] = []
+        for component in components
+        {
+            guard let entity = getEntity(forComponent: component) else
+            {
+                continue
+            }
+            
+            entities.append(entity)
+        }
+        
+        return entities.isEmpty ? nil : entities
+    }
+    
     func allEntities() -> [Entity: Component]
     {
         return m_AnchorComponentByEntity
@@ -259,7 +295,7 @@ class EntityAdmin
         components.forEach { addComponent($0, to: entity) }
     }
     
-    func getComponent<T: Component>(for entity: Entity) -> T?
+    func getComponent<T: Component>(ofType componentType: T.Type = T.self, from entity: Entity) -> T?
     {
         return m_AnchorComponentByEntity[entity]?.sibling(T.self)
     }

@@ -35,11 +35,13 @@
 			membershipExceptions = (
 				core/Avatar.swift,
 				core/component/AvatarComponent.swift,
+				core/component/ControllerComponent.swift,
 				core/Entity.swift,
 				core/entity/ShapeEntity.swift,
 				core/GameWorld.swift,
 				core/manager/AvatarManager.swift,
 				core/system/AvatarSyncSystem.swift,
+				core/system/CameraSystem.swift,
 				core/system/ForceAccumulatorSystem.swift,
 				core/system/GameInputCleanupSystem.swift,
 				core/system/GameInputSystem.swift,
