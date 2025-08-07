@@ -7,6 +7,7 @@
 
 import Foundation
 
+#warning("TODO: Find a more ECS friendly way of managing Avatars.")
 class AvatarManager
 {
     static let shared = AvatarManager()

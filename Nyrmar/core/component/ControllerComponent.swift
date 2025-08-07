@@ -7,14 +7,16 @@
 
 import Foundation
 
+typealias ControllerID = UUID
+
 class ControllerComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: ControllerComponent.self)
     var siblings: SiblingContainer?
 
-    var controllerID: UUID
+    var controllerID: ControllerID
     
-    init(controllerID: UUID = UUID())
+    init(controllerID: ControllerID = ControllerID())
     {
         self.controllerID = controllerID
     }

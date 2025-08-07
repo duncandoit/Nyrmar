@@ -13,13 +13,8 @@ class MovementComponent: Component
     static let typeID: ComponentTypeID = componentTypeID(for: MovementComponent.self)
     var siblings: SiblingContainer?
     
+    var controllerID: ControllerID?
     var destination: CGPoint?
-    var moveSpeed: CGFloat
-    var destinationThreshold: CGFloat = 1.0
-    
-    init(moveSpeed: CGFloat = 200.0, destination: CGPoint? = nil)
-    {
-        self.moveSpeed = moveSpeed
-        self.destination = destination
-    }
+    let destinationThreshold: CGFloat = 1.0
+    var direction: CGVector?
 }

@@ -12,9 +12,9 @@ class ThrallComponent: Component
     static let typeID: ComponentTypeID = componentTypeID(for: ThrallComponent.self)
     var siblings: SiblingContainer?
 
-    var controllerID: UUID?
+    var controllerID: ControllerID?
     
-    init(controllerID: UUID? = nil)
+    init(controllerID: ControllerID)
     {
         self.controllerID = controllerID
     }
