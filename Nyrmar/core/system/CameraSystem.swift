@@ -10,11 +10,11 @@ import SpriteKit
 
 class CameraSystem: System
 {
-    let requiredComponent: ComponentTypeID = GameInputComponent.typeID
+    let requiredComponent: ComponentTypeID = InputComponent.typeID
 
     func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
     {
-        let inputComp = component as! GameInputComponent
+        let inputComp = component as! InputComponent
         guard let location = inputComp.touchLocation else
         {
             return

@@ -1,5 +1,5 @@
 //
-//  GameInputSystem.swift
+//  InputSystem.swift
 //  Nyrmar
 //
 //  Created by Zachary Duncan on 8/2/25.
@@ -8,14 +8,14 @@
 import CoreFoundation
 import Foundation
 
-class GameInputSystem: System
+class InputSystem: System
 {
     let requiredComponent: ComponentTypeID = ThrallComponent.typeID
 
     func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
     {
         let thrallComp = component as! ThrallComponent
-        guard let inputComp = thrallComp.sibling(GameInputComponent.self) else
+        guard let inputComp = thrallComp.sibling(InputComponent.self) else
         {
             //print("[" + #fileID + "]: " + #function + " -> No input given to controlled Entity.")
             return

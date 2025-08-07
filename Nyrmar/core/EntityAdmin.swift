@@ -25,9 +25,10 @@ class EntityAdmin
     private var m_World: GameWorld!
     
     // Start Debug properties
-    private var m_LocalPlayerControllerEntity: Entity!
-    private var m_AvatarEntity: Entity!
+    private weak var m_LocalPlayerControllerEntity: Entity!
+    private weak var m_AvatarEntity: Entity!
     private weak var m_CachedLocalPlayerControllerComponent: ControllerComponent?
+    private weak var m_CachedLocalPlayerInputComponent: InputComponent?
     // End Debug properties
     
     static let shared: EntityAdmin = EntityAdmin()
@@ -35,7 +36,7 @@ class EntityAdmin
     private init()
     {
         m_Systems = [
-            GameInputSystem(),
+            InputSystem(),
                 // TargetName
                 // LifetimeEntity
                 // Path data invalidate
@@ -70,7 +71,7 @@ class EntityAdmin
             SpawnSystem(),
             //LifeSpanSystem(),
                 // SpawnOnDestroy
-            GameInputCleanupSystem()
+            InputCleanupSystem()
         ]
         
         // Post initialization
@@ -87,7 +88,7 @@ class EntityAdmin
     
     func initializeLocalPlayer()
     {
-        let inputComp = GameInputComponent()
+        let inputComp = InputComponent()
         let timestamp = TimeComponent(interval: CACurrentMediaTime())
         let controller = ControllerComponent()
         m_LocalPlayerControllerEntity = addEntity(with: inputComp, timestamp, controller)
@@ -107,6 +108,27 @@ class EntityAdmin
         let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
         addComponent(avatarComp, to: m_AvatarEntity)
         print("[" + #fileID + "]: " + #function + " -> Registered avatar")
+    }
+    
+    func getLocalPlayerInputComponent() -> UUID?
+    {
+        if let localPlayerController = m_CachedLocalPlayerControllerComponent
+        {
+            return localPlayerController.controllerID
+        }
+        else
+        {
+            if let controllerEntity: Entity = getEntities(withComponentType: ControllerComponent.typeID)?.first
+            {
+                let newLocalPlayerControllerComponent = getComponent(ofType: ControllerComponent.self, from: controllerEntity)
+                m_CachedLocalPlayerControllerComponent = newLocalPlayerControllerComponent
+                return newLocalPlayerControllerComponent?.controllerID
+            }
+            else
+            {
+                return nil
+            }
+        }
     }
     
     func getLocalPlayerControllerID() -> UUID?
