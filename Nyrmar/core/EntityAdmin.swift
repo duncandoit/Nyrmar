@@ -10,7 +10,7 @@ import GameplayKit
 
 class EntityAdmin
 {
-    
+    static let shared: EntityAdmin = EntityAdmin()
     
     /// The canonical collection of all Components
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
@@ -24,18 +24,37 @@ class EntityAdmin
     private var m_Systems: [System]
     private var m_World: GameWorld!
     
-    // Start Debug properties
-    private var m_LocalPlayerControllerEntity: Entity!
-    private var m_AvatarEntity: Entity!
-    private weak var m_CachedLocalPlayerControllerComponent: ControllerComponent?
-    // End Debug properties
+    // MARK: - Singleton Components
+    // Sim Clock
+    private var m_SimClockEntity: Entity?
+    private weak var m_SimClockComponent: Single_SimClockComponent?
+    // Sim Clock
     
-    static let shared: EntityAdmin = EntityAdmin()
+    // Player Controller
+//    private var m_LocalPlayerControllerEntity: Entity!
+    // Player Controller
+    
+    // Input
+    private var m_InputEntity: Entity?
+    private weak var m_InputComponent: Single_InputComponent?
+    // Input
+    
+    // Control Bindings
+    private var m_PlayerBindingsEntity: Entity?
+    private weak var m_PlayerBindingsComponent: Single_PlayerBindingsComponent?
+    // Control Bindings
+    
+    // Debug Avatar
+    private var m_AvatarEntity: Entity!
+    // Debug Avatar
+    // MARK: - End Singleton Components
     
     private init()
     {
+        // Initialize Systems
         m_Systems = [
-            GameInputSystem(),
+            SimulationClockSystem(),
+            InputSystem(),
                 // TargetName
                 // LifetimeEntity
                 // Path data invalidate
@@ -49,6 +68,7 @@ class EntityAdmin
                 // AI behavior
                 // AI Spawn
                 // AI movement
+            PlayerCommandSystem(),
                 // Unsynchronized movement
                 // Movement state
             MovementExertionSystem(),
@@ -63,76 +83,144 @@ class EntityAdmin
                 // Health
                 // Socket
                 // Attach
-            CameraSystem(),
+//            CameraSystem(),
                 // DebugEntity
                 // ImageAnimation
             AvatarSyncSystem(),
             SpawnSystem(),
             //LifeSpanSystem(),
                 // SpawnOnDestroy
-            GameInputCleanupSystem()
+//            InputCleanupSystem()
         ]
         
-        // Post initialization
-        
-        initializeLocalPlayer()
+        // Initialize Singleton Components
+        initializeInput()
+//        initializeLocalPlayer()
         initializeControlledAvatar()
     }
     
-    // MARK: - Start of debug functions
     func initializeScene(_ world: GameWorld)
     {
         m_World = world
     }
     
-    func initializeLocalPlayer()
+    // MARK: - Set Up Singleton Components
+    func initializeInput()
     {
-        let inputComp = GameInputComponent()
-        let timestamp = TimeComponent(interval: CACurrentMediaTime())
-        let controller = ControllerComponent()
-        m_LocalPlayerControllerEntity = addEntity(with: inputComp, timestamp, controller)
-        print("[" + #fileID + "]: " + #function + " -> Registered local player controller")
+        let inputComp = Single_InputComponent()
+        let entity = addEntity(with: inputComp)!
+        m_InputEntity = entity
+        m_InputComponent = inputComp
+        print("[" + #fileID + "]: " + #function + " -> Registered input")
     }
+    
+//    func initializeLocalPlayer()
+//    {
+//        let inputComp = getInputComponent()
+//        let timestamp = TimeComponent(interval: CACurrentMediaTime())
+//        let controller = ControllerComponent()
+//        m_LocalPlayerInputComponent = inputComp
+//        m_LocalPlayerControllerComponent = controller
+//        m_LocalPlayerControllerEntity = addEntity(with: inputComp, timestamp, controller)
+//        print("[" + #fileID + "]: " + #function + " -> Registered local player controller")
+//    }
     
     func initializeControlledAvatar()
     {
         let transformComp = TransformComponent()
-        let controlledByComp = ThrallComponent(controllerID: nil)
-        let movementComp = MovementComponent(moveSpeed: 50.0, destination: nil)
+        let thrallComp = ThrallComponent(controllerID: getInputComponent().controllerID)
         let physicsComp = PhysicsComponent()
         let forceComp = ForceAccumulatorComponent()
-        let curveComp = CurveComponent(curveType: .easeIn)
-        m_AvatarEntity = addEntity(with: transformComp, controlledByComp, movementComp, physicsComp, forceComp, curveComp)
+        let baseStatsComp = BaseStatsComponent()
+        m_AvatarEntity = addEntity(with: transformComp, thrallComp, physicsComp, forceComp, baseStatsComp)
         
         let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
         addComponent(avatarComp, to: m_AvatarEntity)
         print("[" + #fileID + "]: " + #function + " -> Registered avatar")
     }
+    // MARK: - End Set Up Singleton Components
     
-    func getLocalPlayerControllerID() -> UUID?
+    // MARK: - Singleton Component Accessors
+    func getInputComponent() -> Single_InputComponent
     {
-        if let localPlayerController = m_CachedLocalPlayerControllerComponent
+        if let inputComp = m_InputComponent
         {
-            return localPlayerController.controllerID
+            return inputComp
         }
-        else
-        {
-            if let controllerEntity: Entity = getEntities(withComponentType: ControllerComponent.typeID)?.first
-            {
-                let newLocalPlayerControllerComponent = getComponent(ofType: ControllerComponent.self, from: controllerEntity)
-                m_CachedLocalPlayerControllerComponent = newLocalPlayerControllerComponent
-                return newLocalPlayerControllerComponent?.controllerID
-            }
-            else
-            {
-                return nil
-            }
-        }
+        
+        initializeInput()
+        
+        return m_InputComponent!
     }
     
-    func getControlledAvatarEntity() -> Entity
+    func getPlayerThrallEntity() -> Entity
     {
         return m_AvatarEntity
+    }
+    
+    /// Returns the ThrallComponent currently possessed by `controllerID`, if any.
+    func getThrallComponent(forControllerID controllerID: UUID) -> ThrallComponent?
+    {
+        guard let thrallComps = m_ComponentsByType[ThrallComponent.typeID] as? [ThrallComponent] else
+        {
+            fatalError("[" + #fileID + "]: " + #function + " -> m_ComponentsByType is improperly keyed.")
+        }
+        
+        for thrallComp in thrallComps
+        {
+            if thrallComp.controllerID == controllerID
+            {
+                return thrallComp
+            }
+        }
+        
+        return nil
+    }
+    
+    func getPlayerBindingsComponent() -> Single_PlayerBindingsComponent
+    {
+        if let bindingsComp = m_PlayerBindingsComponent
+        {
+            return bindingsComp
+        }
+        
+        let mappings = [
+            ActionMapping(intent:.moveToLocation, raw:.pointer, deadZone:0.0,  transform: { $0 })
+        ]
+        
+        let bindingsComp = Single_PlayerBindingsComponent(mappings: mappings)
+        let entity = addEntity(with: bindingsComp)!
+        m_PlayerBindingsEntity = entity
+        m_PlayerBindingsComponent = bindingsComp
+        return bindingsComp
+    }
+    
+    func getSimClock() -> Single_SimClockComponent
+    {
+        if let clockComp = m_SimClockComponent
+        {
+            return clockComp
+        }
+        
+        let clockComp = Single_SimClockComponent()
+        let entity = addEntity(with: clockComp)!
+        m_SimClockEntity = entity
+        m_SimClockComponent = clockComp
+        return clockComp
+    }
+    // MARK: - End Singleton Component Accessors
+    
+    // MARK: - Debug Avatar
+    func removeAvatar(with owningEntity: Entity)
+    {
+        guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
+        {
+            print("[" + #fileID + "]: " + #function + " -> Avatar with owningEntity:\(owningEntity) not found.")
+            return
+        }
+        
+        avatar.removeFromParent()
+        print("[" + #fileID + "]: " + #function + " -> Removed Avatar with owningEntity:\(owningEntity).")
     }
     
     func clearAvatars()
@@ -140,8 +228,9 @@ class EntityAdmin
         AvatarManager.shared.removeAll()
         removeEntities(withComponentType: AvatarComponent.typeID)
     }
-    // MARK: - End of debug functions
-     
+    // MARK: - End Debug Avatar
+    
+    // MARK: - ECS Accessors
     func addEntity(with components: Component...) -> Entity?
     {
         guard !components.isEmpty else
@@ -300,6 +389,26 @@ class EntityAdmin
         return m_AnchorComponentByEntity[entity]?.sibling(T.self)
     }
     
+    func allComponents<T: Component>(ofType componentType: T.Type = T.self, where condition: ((T) -> Bool)? = nil) -> [T]?
+    {
+        guard let componentsOfType = m_ComponentsByType[componentType.typeID] else
+        {
+            return nil
+        }
+        
+        var validComponents: [T] = []
+        for case let component as T in componentsOfType
+        {
+            if let condition = condition, !condition(component)
+            {
+                continue
+            }
+            validComponents.append(component)
+        }
+        
+        return validComponents.isEmpty ? nil : validComponents
+    }
+    
     func removeComponent(ofType componentID: ComponentTypeID, from entity: Entity)
     {
         guard let anchorComp = m_AnchorComponentByEntity[entity] else
@@ -370,19 +479,9 @@ class EntityAdmin
         
         addComponent(component, to: entity)
     }
+    // MARK: - End ECS Accessors
     
-    func removeAvatar(with owningEntity: Entity)
-    {
-        guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
-        {
-            print("[" + #fileID + "]: " + #function + " -> Avatar with owningEntity:\(owningEntity) not found.")
-            return
-        }
-        
-        avatar.removeFromParent()
-        print("[" + #fileID + "]: " + #function + " -> Removed Avatar with owningEntity:\(owningEntity).")
-    }
-    
+    // MARK: - Systems Tick
     func tick(deltaTime: TimeInterval)
     {
         //print("[" + #fileID + "]: " + #function + " -> Entity count:    \(allEntities().count).")
@@ -406,4 +505,5 @@ class EntityAdmin
             }
         }
     }
+    // MARK: - End Systems Tick
 }
