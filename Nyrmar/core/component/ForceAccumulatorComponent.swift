@@ -7,22 +7,17 @@
 
 import CoreFoundation
 
-/// Component for accumulating forces: gravity and external
-class ForceAccumulatorComponent: Component
+final class ForceAccumulatorComponent: Component
 {
-    static let typeID: ComponentTypeID = componentTypeID(for: ForceAccumulatorComponent.self)
+    static let typeID = componentTypeID(for: ForceAccumulatorComponent.self)
     var siblings: SiblingContainer?
+
+    /// Continuous world-space force
+    var force: CGVector = .zero
     
-    /// Downward gravitational acceleration
-    var gravityStrength: CGFloat
-    var gravityEnabled: Bool
+    /// Exponential decay of force
+    var forceDecayPerSecond: CGFloat = 0.0
     
-    /// Other applied forces
-    var impulse: CGVector = .zero
-    
-    init(gravityStrength: CGFloat = 9.8, gravityEnabled: Bool = true)
-    {
-        self.gravityStrength = gravityStrength
-        self.gravityEnabled = gravityEnabled
-    }
+    /// One-frame impulses that are cleared after use
+    var impulses: [CGVector] = []
 }

@@ -50,7 +50,7 @@ struct PointerData
   let id: Int                // touch’s fingerIndex or always 0 for mouse
   let type: PointerType
   let phase: PointerPhase
-  let locationInView: CGPoint
+  let worldLocation: CGPoint
 }
 
 enum PlayerCommandIntent: String, Codable
@@ -104,8 +104,8 @@ final class Single_InputComponent: Component
 
     // Raw event buffers from the OS
     struct DigitalEdge { let input: GenericInput; let isDown: Bool; let t: TimeInterval }
-    var digitalEdges: [DigitalEdge] = []              // one frame only
-    var pointerEvents: [PointerData] = []             // one frame only
+    var digitalEdges: [DigitalEdge] = []  // one frame only
+    var pointerEvents: [PointerData] = [] // one frame only
 
     // Latest analog samples (overwritten by OS; NOT cleared per frame)
     var analog1D: [GenericInput: Float] = [:]
@@ -113,7 +113,7 @@ final class Single_InputComponent: Component
 
     // Minimal persistence to throttle analog spam
     var lastReported1D: [GenericInput: Float] = [:]
-    var lastReported2D: [String: CGPoint] = [:]       // key "X+Y" for a pair
+    var lastReported2D: [String: CGPoint] = [:] // key "X+Y" for a pair
 
     // Output queue (deterministic, serializable)
     var commandQueue: [PlayerCommand] = []

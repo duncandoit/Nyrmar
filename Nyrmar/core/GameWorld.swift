@@ -27,13 +27,13 @@ class GameWorld: SKScene
         EntityAdmin.shared.initializeScene(self)
     }
     
-    func touch(at point: CGPoint, phase: PointerPhase)
+    func touch(at worldSpacePoint: CGPoint, phase: PointerPhase)
     {
         let pointerData = PointerData(
             id:             1,
             type:           .touch,
             phase:          phase,
-            locationInView: point
+            worldLocation:  worldSpacePoint
         )
         
         EntityAdmin.shared.getInputComponent().pointerEvents.append(pointerData)

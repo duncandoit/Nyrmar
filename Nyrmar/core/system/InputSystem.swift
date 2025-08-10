@@ -114,12 +114,12 @@ final class InputSystem: System
                 
                 for pointerData in inputComp.pointerEvents
                 {
-                    let point = world.convertPoint(fromView: pointerData.locationInView)
+                    let worldSpacePoint = pointerData.worldLocation
                     
                     inputComp.commandQueue.append(PlayerCommand(
                         controllerID: controllerID,
                         intent: actionMap.intent,
-                        value: .axis2D(point),
+                        value: .axis2D(worldSpacePoint),
                         timestamp: quantizedTime
                     ))
                 }
@@ -128,3 +128,4 @@ final class InputSystem: System
         }
     }
 }
+

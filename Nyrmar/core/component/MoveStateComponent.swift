@@ -1,0 +1,26 @@
+//
+//  MoveStateComponent.swift
+//  Nyrmar
+//
+//  Created by Zachary Duncan on 8/10/25.
+//
+
+import CoreFoundation
+
+final class MoveStateComponent: Component
+{
+    static let typeID: ComponentTypeID = componentTypeID(for: MoveStateComponent.self)
+    var siblings: SiblingContainer?
+
+    // instantaneous state
+    var velocity: CGVector = .zero        // pts/s
+    var acceleration: CGVector = .zero    // pts/s^2
+
+    // diagnostics / book-keeping
+    var lastAppliedDelta: CGVector = .zero
+    var isSeeking: Bool = false
+    var currentSeekTarget: CGPoint? = nil
+    var remainingDistance: CGFloat = 0
+    var isSettled: Bool = true
+    let settledEpsilon = 0.5
+}

@@ -16,6 +16,7 @@ class BaseStatsComponent: Component
     var siblings: SiblingContainer?
     
     var moveSpeed: CGFloat = 100
+    var moveSpeedMax: CGFloat?
 }
 
 //Effort Stats:

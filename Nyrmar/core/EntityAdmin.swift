@@ -30,10 +30,6 @@ class EntityAdmin
     private weak var m_SimClockComponent: Single_SimClockComponent?
     // Sim Clock
     
-    // Player Controller
-//    private var m_LocalPlayerControllerEntity: Entity!
-    // Player Controller
-    
     // Input
     private var m_InputEntity: Entity?
     private weak var m_InputComponent: Single_InputComponent?
@@ -72,13 +68,12 @@ class EntityAdmin
                 // Unsynchronized movement
                 // Movement state
             MovementExertionSystem(),
-            ParametricMovementSystem(),
+            MovementStateSystem(),
                 // AI perception
                 // PlatformerPlayerController
                 // WallCrawler
                 // RaycastMovement
-            ForceAccumulatorSystem(),
-            PhysicsIntegrationSystem(),
+            PhysicsSystem(),
                 // Grounded
                 // Health
                 // Socket
@@ -95,7 +90,6 @@ class EntityAdmin
         
         // Initialize Singleton Components
         initializeInput()
-//        initializeLocalPlayer()
         initializeControlledAvatar()
     }
     
@@ -114,25 +108,15 @@ class EntityAdmin
         print("[" + #fileID + "]: " + #function + " -> Registered input")
     }
     
-//    func initializeLocalPlayer()
-//    {
-//        let inputComp = getInputComponent()
-//        let timestamp = TimeComponent(interval: CACurrentMediaTime())
-//        let controller = ControllerComponent()
-//        m_LocalPlayerInputComponent = inputComp
-//        m_LocalPlayerControllerComponent = controller
-//        m_LocalPlayerControllerEntity = addEntity(with: inputComp, timestamp, controller)
-//        print("[" + #fileID + "]: " + #function + " -> Registered local player controller")
-//    }
-    
     func initializeControlledAvatar()
     {
         let transformComp = TransformComponent()
         let thrallComp = ThrallComponent(controllerID: getInputComponent().controllerID)
-        let physicsComp = PhysicsComponent()
+        let physicsComp = PhysicsMaterialComponent()
         let forceComp = ForceAccumulatorComponent()
+        let moveStateComp = MoveStateComponent()
         let baseStatsComp = BaseStatsComponent()
-        m_AvatarEntity = addEntity(with: transformComp, thrallComp, physicsComp, forceComp, baseStatsComp)
+        m_AvatarEntity = addEntity(with: transformComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
         
         let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
         addComponent(avatarComp, to: m_AvatarEntity)

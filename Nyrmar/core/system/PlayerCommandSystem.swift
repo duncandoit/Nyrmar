@@ -36,19 +36,20 @@ final class PlayerCommandSystem: System
             switch (command.intent, command.value)
             {
             
-            case (.moveToLocation, .axis2D(let viewPt)):
+            case (.moveToLocation, .axis2D(let worldSpacePoint)):
                 
-                let destination = world.convertPoint(fromView: viewPt)
-                if let movementComp: MovementComponent = thrallComp.sibling(MovementComponent.self)
+                var mover: MoveExertionComponent! = thrallComp.sibling(MoveExertionComponent.self)
+                if mover == nil
                 {
-                    movementComp.destination = destination
+                    mover = MoveExertionComponent()
+                    EntityAdmin.shared.addSibling(mover!, to: thrallComp)
                 }
-                else
-                {
-                    let moveComp = MovementComponent()
-                    moveComp.destination = destination
-                    EntityAdmin.shared.addSibling(moveComp, to: thrallComp)
-                }
+                mover.teleportTo      = nil             // cancel any pending snap
+                mover.deltaWorld      = nil             // cancel one-shot delta
+                mover.velocityDesired = nil             // avoid fighting the seek
+                mover.seekTarget      = worldSpacePoint // primary instruction
+                mover.seekSpeed       = nil             // use mover.moveSpeed; set if you want an override
+                //mover.faceTarget      = viewPt
 
 //            case (.move, .axis2D(let vector)):
 //                

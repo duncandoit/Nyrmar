@@ -7,20 +7,23 @@
 
 import CoreFoundation
 
-/// Component representing core physics state (velocity and mass)
-class PhysicsComponent: Component
+final class PhysicsMaterialComponent: Component
 {
-    static let typeID: ComponentTypeID = componentTypeID(for: PhysicsComponent.self)
+    static let typeID = componentTypeID(for: PhysicsMaterialComponent.self)
     var siblings: SiblingContainer?
-    
-    var velocity: CGVector = .zero
+
+    /// <= 0 is immovable/kinematic
     var mass: CGFloat = 1.0
     
-    /// Linear decay rate (per second). 0 = no drag; e.g. 0.1 slows by 10% each second.
-    var decay: CGFloat = 0.5
+    /// Per-second exponential damping
+    var linearDamping: CGFloat = 0.0
     
-    init(mass: CGFloat = 1.0)
-    {
-        self.mass = mass
-    }
+    /// 0 = none, 1 = full, −1 = inverted
+    var gravityScale: CGFloat = 1.0
+    
+    /// force proportionality to velocity
+    var linearDrag: CGFloat = 0.0
+    
+    /// Material-level speed cap
+    var maxSpeed: CGFloat? = nil
 }

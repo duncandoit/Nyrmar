@@ -12,7 +12,8 @@ class TransformComponent: Component
     static let typeID: ComponentTypeID = componentTypeID(for: TransformComponent.self)
     var siblings: SiblingContainer?
     
-    var isDirty: Bool = true
     var position: CGPoint = .zero
     var zPosition: CGFloat = .zero
+    var zRotation: CGFloat = 0
+    var scale: CGSize = CGSize(width: 1.0, height: 1.0)
 }
