@@ -373,7 +373,7 @@ class EntityAdmin
         return m_AnchorComponentByEntity[entity]?.sibling(T.self)
     }
     
-    func allComponents<T: Component>(ofType componentType: T.Type = T.self, where condition: ((T) -> Bool)? = nil) -> [T]?
+    func getComponents<T: Component>(ofType componentType: T.Type = T.self, where condition: ((T) -> Bool)? = nil) -> [T]?
     {
         guard let componentsOfType = m_ComponentsByType[componentType.typeID] else
         {
@@ -391,6 +391,25 @@ class EntityAdmin
         }
         
         return validComponents.isEmpty ? nil : validComponents
+    }
+    
+    func getComponents(ofEntity entity: Entity) -> [Component]?
+    {
+        guard let siblings = m_AnchorComponentByEntity[entity]?.siblings?.refs else
+        {
+            return nil
+        }
+        
+        var children: [Component] = []
+        for sibling in siblings
+        {
+            if let siblingComponent = sibling.value.value
+            {
+                children.append(siblingComponent)
+            }
+        }
+        
+        return children.isEmpty ? nil : children
     }
     
     func removeComponent(ofType componentID: ComponentTypeID, from entity: Entity)
@@ -469,7 +488,7 @@ class EntityAdmin
     func tick(deltaTime: TimeInterval)
     {
         //print("[" + #fileID + "]: " + #function + " -> Entity count:    \(allEntities().count).")
-        print("[" + #fileID + "]: " + #function + " -> Component count: \(m_ComponentsByType.count).")
+        //print("[" + #fileID + "]: " + #function + " -> Component count: \(m_ComponentsByType.count).")
         
         for system in m_Systems
         {

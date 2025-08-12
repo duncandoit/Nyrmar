@@ -7,7 +7,6 @@
 
 import CoreFoundation
 import Foundation
-import UIKit
 
 final class InputSystem: System
 {
@@ -128,4 +127,3 @@ final class InputSystem: System
         }
     }
 }
-

@@ -15,10 +15,6 @@ final class PhysicsSystem: System
     func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
     {
         let moveStateComp = component as! MoveStateComponent
-        guard let moverComp: MoveExertionComponent = moveStateComp.sibling(MoveExertionComponent.self) else
-        {
-            return
-        }
         guard let physicsComp: PhysicsMaterialComponent = moveStateComp.sibling(PhysicsMaterialComponent.self) else
         {
             return
