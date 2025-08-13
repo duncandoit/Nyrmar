@@ -5,8 +5,7 @@
 //  Created by Zachary Duncan on 7/31/25.
 //
 
-import SpriteKit
-import GameplayKit
+import MetalKit
 
 class EntityAdmin
 {
@@ -29,6 +28,9 @@ class EntityAdmin
     private weak var m_MetalSurfaceComponent: Single_MetalSurfaceComponent?
     private weak var m_Camera2DComponent: Single_Camera2DComponent?
     
+    // Asset Management
+    private weak var m_MetalTextureCacheComponent: Single_MetalTextureCacheComponent?
+    
     // Sim Clock
     private var m_SimClockEntity: Entity?
     private weak var m_SimClockComponent: Single_SimClockComponent?
@@ -43,7 +45,8 @@ class EntityAdmin
     
     // Test Sprite
     private var m_TestSpriteEntity: Entity!
-    // MARK: - End Singleton Components
+    
+    // MARK: - Initializers
     
     private init()
     {
@@ -64,7 +67,7 @@ class EntityAdmin
                 // AI behavior
                 // AI Spawn
                 // AI movement
-            PlayerCommandSystem(),
+            CommandSystem(),
                 // Unsynchronized movement
                 // Movement state
             MovementExertionSystem(),
@@ -80,6 +83,7 @@ class EntityAdmin
                 // Attach
                 // DebugEntity
                 // ImageAnimation
+            ViewportSystem(),
             SpriteSpawnSystem(),
             TilemapSpawnSystem(),
             RenderSystem(),
@@ -95,6 +99,11 @@ class EntityAdmin
     
     func initializeMetalViewport(layer: CAMetalLayer, pixelsPerUnit: CGFloat = 100)
     {
+        guard m_ViewportEntity == nil else
+        {
+            return
+        }
+        
         let surfaceComp = Single_MetalSurfaceComponent(layer: layer)
         let cameraComp = Single_Camera2DComponent()
         cameraComp.pixelsPerUnit = pixelsPerUnit
@@ -102,22 +111,39 @@ class EntityAdmin
         m_ViewportEntity = addEntity(with: surfaceComp, cameraComp)!
         m_MetalSurfaceComponent = surfaceComp
         m_Camera2DComponent = cameraComp
+        
         print("[" + #fileID + "]: " + #function + " -> Registered Metal Viewport")
     }
     
-    func getMetalSurfaceComponent() -> Single_MetalSurfaceComponent
+    func initializeMetalTextureCache()
     {
-        return m_MetalSurfaceComponent!
+        guard let surfaceComp = m_MetalSurfaceComponent else
+        {
+            return
+        }
+        
+        guard surfaceComp.device != nil else
+        {
+            return
+        }
+        
+        guard m_MetalTextureCacheComponent == nil else
+        {
+            return
+        }
+        
+        let cacheComp = Single_MetalTextureCacheComponent()
+        _ = addEntity(with: cacheComp)!
+        m_MetalTextureCacheComponent = cacheComp
     }
     
-    func getCamera2DComponent() -> Single_Camera2DComponent
-    {
-        return m_Camera2DComponent!
-    }
-    
-    // MARK: - Set Up Singleton Components
     private func initializeInput()
     {
+        guard m_InputEntity == nil else
+        {
+            return
+        }
+        
         let inputComp = Single_InputComponent()
         let entity = addEntity(with: inputComp)!
         m_InputEntity = entity
@@ -132,6 +158,11 @@ class EntityAdmin
         tint: SIMD4<Float> = .init(1, 1, 1, 1),
         addCollision: Bool = false
     ){
+        guard m_TestSpriteEntity == nil else
+        {
+            return
+        }
+        
         // Author via prefab and the SpawnSystem will resolve to SpriteRenderComponent
         let transform = TransformComponent()
         transform.position = worldPosition
@@ -142,19 +173,46 @@ class EntityAdmin
         prefab.tint = tint
         
         let collisionComp = CollisionComponent(shape: .aabb(worldSize))
+        let thrallComp = ThrallComponent(controllerID: inputComponent().controllerID)
+        let physicsComp = PhysicsMaterialComponent()
+        let forceComp = ForceAccumulatorComponent()
+        let moveStateComp = MoveStateComponent()
+        let baseStatsComp = BaseStatsComponent()
 
-        let e = addEntity(with: transform, prefab, collisionComp)
-        m_TestSpriteEntity = e
+        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, /*physicsComp, forceComp,*/ moveStateComp, baseStatsComp)
+        m_TestSpriteEntity = entity
     }
-    // MARK: - End Set Up Singleton Components
     
     // MARK: - Singleton Component Accessors
-    func getTestSprite() -> Entity
+    
+    func metalSurfaceComponent() -> Single_MetalSurfaceComponent
+    {
+        return m_MetalSurfaceComponent!
+    }
+    
+    func camera2DComponent() -> Single_Camera2DComponent
+    {
+        return m_Camera2DComponent!
+    }
+    
+    func metalTextureCacheComponent() -> Single_MetalTextureCacheComponent?
+    {
+        if let cacheComp = m_MetalTextureCacheComponent
+        {
+            return cacheComp
+        }
+        
+        initializeMetalTextureCache()
+        
+        return m_MetalTextureCacheComponent
+    }
+    
+    func testSpriteEntity() -> Entity
     {
         return m_TestSpriteEntity
     }
     
-    func getInputComponent() -> Single_InputComponent
+    func inputComponent() -> Single_InputComponent
     {
         if let inputComp = m_InputComponent
         {
@@ -165,6 +223,40 @@ class EntityAdmin
         
         return m_InputComponent!
     }
+    
+    func playerBindingsComponent() -> Single_PlayerBindingsComponent
+    {
+        if let bindingsComp = m_PlayerBindingsComponent
+        {
+            return bindingsComp
+        }
+        
+        let mappings = [
+            ActionMapping(intent:.moveToLocation, raw:.pointer, deadZone:0.0,  transform: { $0 })
+        ]
+        
+        let bindingsComp = Single_PlayerBindingsComponent(mappings: mappings)
+        let entity = addEntity(with: bindingsComp)!
+        m_PlayerBindingsEntity = entity
+        m_PlayerBindingsComponent = bindingsComp
+        return bindingsComp
+    }
+    
+    func simClockComponent() -> Single_SimClockComponent
+    {
+        if let clockComp = m_SimClockComponent
+        {
+            return clockComp
+        }
+        
+        let clockComp = Single_SimClockComponent()
+        let entity = addEntity(with: clockComp)!
+        m_SimClockEntity = entity
+        m_SimClockComponent = clockComp
+        return clockComp
+    }
+    
+    // MARK: - Helper Accessors
     
     /// Returns the ThrallComponent currently possessed by `controllerID`, if any.
     func getThrallComponent(forControllerID controllerID: UUID) -> ThrallComponent?
@@ -185,60 +277,8 @@ class EntityAdmin
         return nil
     }
     
-    func getPlayerBindingsComponent() -> Single_PlayerBindingsComponent
-    {
-        if let bindingsComp = m_PlayerBindingsComponent
-        {
-            return bindingsComp
-        }
-        
-        let mappings = [
-            ActionMapping(intent:.moveToLocation, raw:.pointer, deadZone:0.0,  transform: { $0 })
-        ]
-        
-        let bindingsComp = Single_PlayerBindingsComponent(mappings: mappings)
-        let entity = addEntity(with: bindingsComp)!
-        m_PlayerBindingsEntity = entity
-        m_PlayerBindingsComponent = bindingsComp
-        return bindingsComp
-    }
-    
-    func getSimClock() -> Single_SimClockComponent
-    {
-        if let clockComp = m_SimClockComponent
-        {
-            return clockComp
-        }
-        
-        let clockComp = Single_SimClockComponent()
-        let entity = addEntity(with: clockComp)!
-        m_SimClockEntity = entity
-        m_SimClockComponent = clockComp
-        return clockComp
-    }
-    // MARK: - End Singleton Component Accessors
-    
-    // MARK: - Debug Avatar
-//    func removeAvatar(with owningEntity: Entity)
-//    {
-//        guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
-//        {
-//            print("[" + #fileID + "]: " + #function + " -> Avatar with owningEntity:\(owningEntity) not found.")
-//            return
-//        }
-//        
-//        avatar.removeFromParent()
-//        print("[" + #fileID + "]: " + #function + " -> Removed Avatar with owningEntity:\(owningEntity).")
-//    }
-//    
-//    func clearAvatars()
-//    {
-//        AvatarManager.shared.removeAll()
-//        removeEntities(withComponentType: AvatarComponent.typeID)
-//    }
-    // MARK: - End Debug Avatar
-    
     // MARK: - ECS Accessors
+    
     func addEntity(with components: Component...) -> Entity?
     {
         guard !components.isEmpty else
@@ -250,7 +290,7 @@ class EntityAdmin
         let entity = Entity()
         addComponents(components, to: entity)
         
-        print("[" + #fileID + "]: " + #function + " -> Entity:\(entity) added.")
+        print("[" + #fileID + "]: Entity Added: \(entity).")
         return entity
     }
     
@@ -319,7 +359,6 @@ class EntityAdmin
     
     func removeAllEntities()
     {
-//        AvatarManager.shared.removeAll()
         m_AnchorComponentByEntity.removeAll()
         m_ComponentsByType.removeAll()
         m_EntitiesByComponent.removeAll()
@@ -384,7 +423,7 @@ class EntityAdmin
         // record reverse mapping
         m_EntitiesByComponent[ObjectIdentifier(component)] = entity
         
-        print("[" + #fileID + "]: " + #function + " -> Component type \(String(describing: component)) added to Entity:\(entity)")
+        print("[" + #fileID + "]: Component Added: (typeid:\(String(describing: component.typeID()))) \(String(describing: component)), to Entity:\(entity)")
     }
     
     func addComponents(_ components: [Component], to entity: Entity)
@@ -505,7 +544,7 @@ class EntityAdmin
         // Remove from the shared sibling container
         siblings.refs.removeValue(forKey: componentID)
         
-        print("[" + #fileID + "]: " + #function + " -> Removed Component:\(String(describing: componentID)) from Entity:\(entity).")
+        print("[" + #fileID + "]: Component Removed: (typeid:\(String(describing: componentID))), Entity:\(entity).")
     }
     
     /// Add a new component as a sibling to an existing component and the same entity.
@@ -519,9 +558,9 @@ class EntityAdmin
         
         addComponent(component, to: entity)
     }
-    // MARK: - End ECS Accessors
     
     // MARK: - Systems Tick
+    
     func tick(deltaTime: TimeInterval)
     {
         //print("[" + #fileID + "]: " + #function + " -> Entity count:    \(allEntities().count).")
@@ -541,10 +580,8 @@ class EntityAdmin
             {
                 // Any other component that the system needs should be searched
                 // for in the siblings to this component.
-//                system.update(deltaTime: deltaTime, component: component, world: m_World)
                 system.update(deltaTime: deltaTime, component: component)
             }
         }
     }
-    // MARK: - End Systems Tick
 }

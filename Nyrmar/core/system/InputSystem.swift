@@ -15,8 +15,8 @@ final class InputSystem: System
     func update(deltaTime: TimeInterval, component: any Component)
     {
         let inputComp = component as! Single_InputComponent
-        let actionMaps = EntityAdmin.shared.getPlayerBindingsComponent().mappings
-        let clockComp = EntityAdmin.shared.getSimClock()
+        let actionMaps = EntityAdmin.shared.playerBindingsComponent().mappings
+        let clockComp = EntityAdmin.shared.simClockComponent()
         let quantizedTime = clockComp.quantizedNow
         let controllerID = inputComp.controllerID
 
@@ -118,7 +118,7 @@ final class InputSystem: System
                     inputComp.commandQueue.append(PlayerCommand(
                         controllerID: controllerID,
                         intent: actionMap.intent,
-                        value: .axis2D(worldSpacePoint),
+                        value: .screenPosition(worldSpacePoint),
                         timestamp: quantizedTime
                     ))
                 }

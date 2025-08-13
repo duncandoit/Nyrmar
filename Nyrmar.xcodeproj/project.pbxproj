@@ -33,32 +33,27 @@
 		C3DAF26D2E3BDC9B00C46474 /* Exceptions for "Nyrmar" folder in "NyrmarTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				core/Avatar.swift,
-				core/component/AvatarComponent.swift,
 				core/component/CollisionComponent.swift,
 				core/component/ControllerComponent.swift,
 				core/component/Single_InputComponent.swift,
+				core/component/Single_MetalTextureCacheComponent.swift,
 				core/component/Single_PlayerBindingsComponent.swift,
 				core/component/Single_SimClockComponent.swift,
 				core/component/SpriteComponents.swift,
 				core/component/TilemapComponents.swift,
 				core/Entity.swift,
-				core/GameWorld.swift,
 				core/shader/sprite2d.metal,
-				core/system/AvatarSyncSystem.swift,
 				core/system/InputCleanupSystem.swift,
 				core/system/InputSystem.swift,
 				core/system/MovementExertionSystem.swift,
 				core/system/MovementStateSystem.swift,
 				core/system/PhysicsSystem.swift,
-				core/system/PlayerCommandSystem.swift,
 				core/system/RenderSystem.swift,
 				core/system/SimulationClockSystem.swift,
-				core/system/SpawnSystem.swift,
 				core/system/SpriteSpawnSystem.swift,
 				core/system/TilemapSpawnSystem.swift,
+				core/system/ViewportSystem.swift,
 				core/util/AssetManagerUtil.swift,
-				core/util/MetalUtil.swift,
 			);
 			target = C3DAF2492E3BDB1B00C46474 /* NyrmarTests */;
 		};

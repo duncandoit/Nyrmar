@@ -14,6 +14,8 @@ class TransformComponent: Component
     
     var position: CGPoint = .zero
     var zPosition: CGFloat = .zero
+    
+    /// Rotation in radians
     var zRotation: CGFloat = 0
     var scale: CGSize = CGSize(width: 1.0, height: 1.0)
 }

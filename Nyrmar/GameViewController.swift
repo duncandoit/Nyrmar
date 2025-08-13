@@ -5,51 +5,77 @@
 //  Created by Zachary Duncan on 7/31/25.
 //
 
-import UIKit
-import SpriteKit
-import GameplayKit
+import MetalKit
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController
+{
+    private let metalLayer = CAMetalLayer()
 
-    override func viewDidLoad() {
+    override func viewDidLoad()
+    {
         super.viewDidLoad()
+
+        view.layer.isGeometryFlipped = true
+
+        metalLayer.pixelFormat = .bgra8Unorm
+        metalLayer.contentsScale = UIScreen.main.scale   // view.window is nil here
+        metalLayer.frame = view.layer.bounds
+        view.layer.addSublayer(metalLayer)
+
+        // Ensure the viewport entity (singleton surface + camera)
+        EntityAdmin.shared.initializeMetalViewport(layer: metalLayer, pixelsPerUnit: 100)
+    }
+
+    override func viewDidLayoutSubviews()
+    {
+        super.viewDidLayoutSubviews()
+        metalLayer.frame = view.layer.bounds
+        metalLayer.contentsScale = UIScreen.main.scale
+        metalLayer.drawableSize = CGSize(width: metalLayer.bounds.width * metalLayer.contentsScale,
+                                         height: metalLayer.bounds.height * metalLayer.contentsScale)
+    }
+
+    override func viewDidAppear(_ animated: Bool)
+    {
+        super.viewDidAppear(animated)
+        GameLoop.shared.start()
+    }
+
+    override func viewWillDisappear(_ animated: Bool)
+    {
+        super.viewWillDisappear(animated)
+        GameLoop.shared.stop()
+    }
+    
+    func touch(at screenSpacePoint: CGPoint, phase: PointerPhase)
+    {
+        let pointerData = PointerData(
+            id:             1,
+            type:           .touch,
+            phase:          phase,
+            worldLocation:  screenSpacePoint
+        )
         
-        // Load 'GameScene.sks' as a GKScene. This provides gameplay related content
-        // including entities and graphs.
-        if let scene = GKScene(fileNamed: "GameScene") {
-            
-            // Get the SKScene from the loaded GKScene
-            if let sceneNode = scene.rootNode as! GameWorld? {
-                
-                // Copy gameplay related content over to the scene
-//                sceneNode.entities = scene.entities
-//                sceneNode.graphs = scene.graphs
-                
-                // Set the scale mode to scale to fit the window
-                sceneNode.scaleMode = .aspectFill
-                
-                // Present the scene
-                if let view = self.view as! SKView? {
-                    view.presentScene(sceneNode)
-                    
-                    view.ignoresSiblingOrder = true
-                    
-                    view.showsFPS = true
-                    view.showsNodeCount = true
-                }
-            }
-        }
+        EntityAdmin.shared.inputComponent().pointerEvents.append(pointerData)
     }
-
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return .allButUpsideDown
-        } else {
-            return .all
-        }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
+    {
+        for t in touches { touch(at: t.location(in: view), phase: .down) }
     }
-
-    override var prefersStatusBarHidden: Bool {
-        return true
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
+    {
+        for t in touches { touch(at: t.location(in: view), phase: .dragged) }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
+    {
+        for t in touches { touch(at: t.location(in: view), phase: .up) }
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
+    {
+        for t in touches { touch(at: t.location(in: view), phase: .up) }
     }
 }

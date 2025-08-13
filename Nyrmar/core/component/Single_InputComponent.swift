@@ -65,9 +65,10 @@ enum PlayerCommandIntent: String, Codable
 
 enum CommandValue: Codable
 {
-    case isPressed(Bool)     // digital
-    case axis1D(Float)       // trigger / single axis
-    case axis2D(CGPoint)     // x,y / dx,dy
+    case isPressed(Bool)         // digital
+    case axis1D(Float)           // trigger / single axis
+    case axis2D(CGPoint)         // x,y / dx,dy
+    case screenPosition(CGPoint) // x,y
 }
 
 struct PlayerCommand: Codable

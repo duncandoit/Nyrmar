@@ -7,90 +7,79 @@
 
 import MetalKit
 
-final class AssetManagerUtil
-{
-    static let shared = AssetManagerUtil()
-    private var textures: [String: MTLTexture] = [:]
-    private var spriteMaps: [String: SpriteMap] = [:]
-    
-    private init() {}
+enum AssetLoaderUtil {
+    static let textureExts = ["ktx2","png","jpg","jpeg"]
 
-    struct SpriteMap: Decodable
+    @inline(__always)
+    static func loadTexture(name: String, loader: MTKTextureLoader, bundle: Bundle = .main) -> MTLTexture?
     {
-        struct Frame: Decodable
-        {
-            let u0: Float, v0: Float, u1: Float, v1: Float
-        }
-        
-        let texture: String
-        let frames: [String: Frame]
-    }
-
-    func texture(named name: String, device: MTLDevice) -> MTLTexture?
-    {
-        if let t = textures[name]
-        {
-            return t
-        }
-        
-        let loader = MTKTextureLoader(device: device)
-
-        // Asset catalog (name without extension)
-        if let tex = try? loader.newTexture(
+        // 1) Asset catalog
+        if let t = try? loader.newTexture(
             name: name,
             scaleFactor: 1.0,
-            bundle: .main,
+            bundle: bundle,
             options: [
                 .SRGB: true as NSNumber,
                 .textureUsage: NSNumber(value: MTLTextureUsage.shaderRead.rawValue),
                 .textureStorageMode: NSNumber(value: MTLStorageMode.private.rawValue)
             ])
         {
-            textures[name] = tex
-            return tex
+            return t
         }
-
-        // Bundle subdirectories (assets/texture) with common extensions
-        for ext in ["ktx2","png","jpg","jpeg"]
+        
+        // 2) Bundle subdir fallback
+        for ext in textureExts
         {
-            if let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "assets/texture"),
-               let tex = try? loader.newTexture(URL: url, options: [
+            if let url = bundle.url(forResource: name, withExtension: ext, subdirectory: "assets/texture"),
+               let t = try? loader.newTexture(
+                URL: url,
+                options: [
                     .SRGB: true as NSNumber,
                     .textureUsage: NSNumber(value: MTLTextureUsage.shaderRead.rawValue),
                     .textureStorageMode: NSNumber(value: MTLStorageMode.private.rawValue)
                ])
             {
-                textures[name] = tex
-                return tex
+                return t
             }
         }
-        
         return nil
     }
 
-    func spriteMap(named name: String) -> SpriteMap?
+    @inline(__always)
+    static func loadSpriteMap(name: String, bundle: Bundle = .main) -> Single_MetalTextureCacheComponent.SpriteMap?
     {
-        if let m = spriteMaps[name]
+        guard let url = bundle.url(forResource: name, withExtension: "json", subdirectory: "assets/spritemap"),
+              let data = try? Data(contentsOf: url),
+              let map = try? JSONDecoder().decode(Single_MetalTextureCacheComponent.SpriteMap.self, from: data)
+        else
         {
-            return m
+            return nil
+        }
+        return map
+    }
+
+    @inline(__always)
+    static func makeGridUVLUT(for texture: MTLTexture, tileSize: CGSize) -> [SIMD4<Float>]?
+    {
+        let tw = Int(tileSize.width), th = Int(tileSize.height)
+        guard tw > 0, th > 0, texture.width >= tw, texture.height >= th else
+        {
+            return nil
         }
         
-        // Prefer bundle subdirectory if you organized them there
-        if let url = Bundle.main.url(forResource: name, withExtension: "json", subdirectory: "assets/spritemap"),
-           let data = try? Data(contentsOf: url),
-           let map = try? JSONDecoder().decode(SpriteMap.self, from: data)
-        {
-            spriteMaps[name] = map; return map
-        }
+        let cols = texture.width / tw, rows = texture.height / th
+        let total = max(1, cols * rows)
+        var out = [SIMD4<Float>](repeating: .zero, count: total)
+        let W = Float(texture.width), H = Float(texture.height)
         
-        // Fallback: bundle root
-        if let url = Bundle.main.url(forResource: name, withExtension: "json"),
-           let data = try? Data(contentsOf: url),
-           let map = try? JSONDecoder().decode(SpriteMap.self, from: data)
+        for i in 0..<total
         {
-            spriteMaps[name] = map; return map
+            let c = i % cols
+            let r = i / cols
+            let u0 = Float(c * tw) / W, v0 = Float(r * th) / H
+            let u1 = Float((c + 1) * tw) / W, v1 = Float((r + 1) * th) / H
+            out[i] = SIMD4<Float>(u0, v0, u1, v1)
         }
-        
-        return nil
+        return out
     }
 }

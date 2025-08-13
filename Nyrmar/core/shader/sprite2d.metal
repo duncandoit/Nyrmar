@@ -10,20 +10,20 @@ using namespace metal;
 
 struct SpriteVertext
 {
-    float2 pos; float2 uv; float4 col;
+    float2 position; float2 uv; float4 color;
 };
 
 struct SpriteVertextOut
 {
-    float4 pos [[position]]; float2 uv; float4 col;
+    float4 position [[position]]; float2 uv; float4 color;
 };
 
 vertex SpriteVertextOut vs_sprite2D(uint vid [[vertex_id]], const device SpriteVertext* v [[buffer(0)]])
 {
     SpriteVertextOut o;
-    o.pos=float4(v[vid].pos,0,1);
+    o.position=float4(v[vid].position,0,1);
     o.uv=v[vid].uv;
-    o.col=v[vid].col;
+    o.color=v[vid].color;
     
     return o;
 }
@@ -31,7 +31,7 @@ vertex SpriteVertextOut vs_sprite2D(uint vid [[vertex_id]], const device SpriteV
 fragment float4 fs_sprite2D(SpriteVertextOut in [[stage_in]], texture2d<float> tex [[texture(0)]])
 {
     constexpr sampler s(address::clamp_to_edge, filter::linear);
-    float4 c = tex.sample(s, in.uv) * in.col;
+    float4 c = tex.sample(s, in.uv) * in.color;
     
     return c;
 }
