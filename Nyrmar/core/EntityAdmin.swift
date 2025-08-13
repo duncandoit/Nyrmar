@@ -22,7 +22,6 @@ class EntityAdmin
     private var m_AnchorComponentByEntity: [Entity: Component] = [:]
     
     private var m_Systems: [System]
-//    private var m_World: GameWorld!
     
     // MARK: - Singleton Components
     // Rendering
@@ -42,8 +41,8 @@ class EntityAdmin
     private var m_PlayerBindingsEntity: Entity?
     private weak var m_PlayerBindingsComponent: Single_PlayerBindingsComponent?
     
-    // Debug Avatar
-    private var m_AvatarEntity: Entity!
+    // Test Sprite
+    private var m_TestSpriteEntity: Entity!
     // MARK: - End Singleton Components
     
     private init()
@@ -79,22 +78,19 @@ class EntityAdmin
                 // Health
                 // Socket
                 // Attach
-//            CameraSystem(),
                 // DebugEntity
                 // ImageAnimation
-//            AvatarSyncSystem(),
             SpriteSpawnSystem(),
             TilemapSpawnSystem(),
             RenderSystem(),
-//            SpawnSystem(),
-            //LifeSpanSystem(),
+                //LifeSpanSystem,
                 // SpawnOnDestroy
 //            InputCleanupSystem()
         ]
         
         // Initialize Singleton Components
         initializeInput()
-//        initializeControlledAvatar()
+        initializeTestSprite(textureName: "finalfall-logo")
     }
     
     func initializeMetalViewport(layer: CAMetalLayer, pixelsPerUnit: CGFloat = 100)
@@ -129,23 +125,35 @@ class EntityAdmin
         print("[" + #fileID + "]: " + #function + " -> Registered input")
     }
     
-//    private func initializeControlledAvatar()
-//    {
-//        let transformComp = TransformComponent()
-//        let thrallComp = ThrallComponent(controllerID: getInputComponent().controllerID)
-//        let physicsComp = PhysicsMaterialComponent()
-//        let forceComp = ForceAccumulatorComponent()
-//        let moveStateComp = MoveStateComponent()
-//        let baseStatsComp = BaseStatsComponent()
-//        m_AvatarEntity = addEntity(with: transformComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
-//        
-//        let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
-//        addComponent(avatarComp, to: m_AvatarEntity)
-//        print("[" + #fileID + "]: " + #function + " -> Registered avatar")
-//    }
+    func initializeTestSprite(
+        textureName: String,
+        worldPosition: CGPoint = .zero,
+        worldSize: CGSize = .init(width: 1, height: 1),
+        tint: SIMD4<Float> = .init(1, 1, 1, 1),
+        addCollision: Bool = false
+    ){
+        // Author via prefab and the SpawnSystem will resolve to SpriteRenderComponent
+        let transform = TransformComponent()
+        transform.position = worldPosition
+        transform.scale = worldSize
+
+        let prefab = SpritePrefabComponent(source: .texture(name: textureName))
+        prefab.size = worldSize
+        prefab.tint = tint
+        
+        let collisionComp = CollisionComponent(shape: .aabb(worldSize))
+
+        let e = addEntity(with: transform, prefab, collisionComp)
+        m_TestSpriteEntity = e
+    }
     // MARK: - End Set Up Singleton Components
     
     // MARK: - Singleton Component Accessors
+    func getTestSprite() -> Entity
+    {
+        return m_TestSpriteEntity
+    }
+    
     func getInputComponent() -> Single_InputComponent
     {
         if let inputComp = m_InputComponent
@@ -156,11 +164,6 @@ class EntityAdmin
         initializeInput()
         
         return m_InputComponent!
-    }
-    
-    func getPlayerThrallEntity() -> Entity
-    {
-        return m_AvatarEntity
     }
     
     /// Returns the ThrallComponent currently possessed by `controllerID`, if any.

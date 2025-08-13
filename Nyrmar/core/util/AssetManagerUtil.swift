@@ -10,16 +10,11 @@ import MetalKit
 final class AssetManagerUtil
 {
     static let shared = AssetManagerUtil()
-    
-    private let loader: MTKTextureLoader
     private var textures: [String: MTLTexture] = [:]
     private var spriteMaps: [String: SpriteMap] = [:]
     
-    private init()
-    {
-        loader = MTKTextureLoader(device: MTLCreateSystemDefaultDevice()!)
-    }
-    
+    private init() {}
+
     struct SpriteMap: Decodable
     {
         struct Frame: Decodable
@@ -38,21 +33,39 @@ final class AssetManagerUtil
             return t
         }
         
-        guard let url = Bundle.main.url(forResource: name, withExtension: nil) else
+        let loader = MTKTextureLoader(device: device)
+
+        // Asset catalog (name without extension)
+        if let tex = try? loader.newTexture(
+            name: name,
+            scaleFactor: 1.0,
+            bundle: .main,
+            options: [
+                .SRGB: true as NSNumber,
+                .textureUsage: NSNumber(value: MTLTextureUsage.shaderRead.rawValue),
+                .textureStorageMode: NSNumber(value: MTLStorageMode.private.rawValue)
+            ])
         {
-            return nil
+            textures[name] = tex
+            return tex
+        }
+
+        // Bundle subdirectories (assets/texture) with common extensions
+        for ext in ["ktx2","png","jpg","jpeg"]
+        {
+            if let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "assets/texture"),
+               let tex = try? loader.newTexture(URL: url, options: [
+                    .SRGB: true as NSNumber,
+                    .textureUsage: NSNumber(value: MTLTextureUsage.shaderRead.rawValue),
+                    .textureStorageMode: NSNumber(value: MTLStorageMode.private.rawValue)
+               ])
+            {
+                textures[name] = tex
+                return tex
+            }
         }
         
-        let t = try? MTKTextureLoader(device: device).newTexture(URL: url, options: [
-            MTKTextureLoader.Option.SRGB: false
-        ])
-        
-        if let t = t
-        {
-            textures[name] = t
-        }
-        
-        return t
+        return nil
     }
 
     func spriteMap(named name: String) -> SpriteMap?
@@ -62,14 +75,22 @@ final class AssetManagerUtil
             return m
         }
         
-        guard let url = Bundle.main.url(forResource: name, withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let map = try? JSONDecoder().decode(SpriteMap.self, from: data) else
+        // Prefer bundle subdirectory if you organized them there
+        if let url = Bundle.main.url(forResource: name, withExtension: "json", subdirectory: "assets/spritemap"),
+           let data = try? Data(contentsOf: url),
+           let map = try? JSONDecoder().decode(SpriteMap.self, from: data)
         {
-            return nil
+            spriteMaps[name] = map; return map
         }
         
-        spriteMaps[name] = map
-        return map
+        // Fallback: bundle root
+        if let url = Bundle.main.url(forResource: name, withExtension: "json"),
+           let data = try? Data(contentsOf: url),
+           let map = try? JSONDecoder().decode(SpriteMap.self, from: data)
+        {
+            spriteMaps[name] = map; return map
+        }
+        
+        return nil
     }
 }
