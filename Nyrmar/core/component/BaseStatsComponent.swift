@@ -12,7 +12,7 @@ import Foundation
 /// These are combined with EffortStats to increase the Hero Stats when the character levels up.
 class BaseStatsComponent: Component
 {
-    static var typeID: ComponentTypeID = componentTypeID(for: AvatarComponent.self)
+    static var typeID: ComponentTypeID = componentTypeID(for: BaseStatsComponent.self)
     var siblings: SiblingContainer?
     
     var moveSpeed: CGFloat = 100

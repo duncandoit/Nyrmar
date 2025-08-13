@@ -11,7 +11,7 @@ final class PlayerCommandSystem: System
 {
     let requiredComponent: ComponentTypeID = ThrallComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+    func update(deltaTime: TimeInterval, component: any Component)
     {
         let thrallComp = component as! ThrallComponent
         let inputComp = EntityAdmin.shared.getInputComponent()

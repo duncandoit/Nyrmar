@@ -11,7 +11,7 @@ final class SimulationClockSystem: System
 {
     let requiredComponent: ComponentTypeID = Single_SimClockComponent.typeID
     
-    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+    func update(deltaTime: TimeInterval, component: any Component)
     {
         guard let clockComp = component as? Single_SimClockComponent else
         {

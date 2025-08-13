@@ -11,7 +11,7 @@ import Foundation
 //{
 //    let requiredComponent: ComponentTypeID = InputComponent.typeID
 //
-//    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+//    func update(deltaTime: TimeInterval, component: any Component)
 //    {
 //        EntityAdmin.shared.removeComponent(ofType: InputComponent.typeID, from: EntityAdmin.shared.getLocalPlayerThrallEntity())
 //    }

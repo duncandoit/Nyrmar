@@ -12,7 +12,7 @@ public extension CGVector
     @inlinable var lengthSquared: CGFloat { dx*dx + dy*dy }
     @inlinable var length: CGFloat { sqrt(lengthSquared) }
 
-    @inlinable func normalized(tolerance: CGFloat = .leastNonzeroMagnitude) -> CGVector
+    func normalized(tolerance: CGFloat = .leastNonzeroMagnitude) -> CGVector
     {
         let L = length
         return L > tolerance ? CGVector(dx: dx / L, dy: dy / L) : .zero

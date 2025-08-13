@@ -12,7 +12,7 @@ final class PhysicsSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+    func update(deltaTime: TimeInterval, component: any Component)
     {
         let moveStateComp = component as! MoveStateComponent
         guard let physicsComp: PhysicsMaterialComponent = moveStateComp.sibling(PhysicsMaterialComponent.self) else

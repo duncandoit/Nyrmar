@@ -11,5 +11,5 @@ protocol System
 {
     /// Declares the component type it operates on
     var requiredComponent: ComponentTypeID { get }
-    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+    func update(deltaTime: TimeInterval, component: any Component)
 }

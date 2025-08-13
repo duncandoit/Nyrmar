@@ -7,6 +7,7 @@
 
 import SpriteKit
 import GameplayKit
+import MetalKit
 
 class GameWorld: SKScene
 {
@@ -16,15 +17,6 @@ class GameWorld: SKScene
     {
         super.sceneDidLoad()
         print("[" + #fileID + "]: " + #function)
-        
-        m_LastUpdateTime = 0
-        
-        registerEntityAdmin()
-    }
-    
-    func registerEntityAdmin()
-    {
-        EntityAdmin.shared.initializeScene(self)
     }
     
     func touch(at worldSpacePoint: CGPoint, phase: PointerPhase)
@@ -70,5 +62,46 @@ class GameWorld: SKScene
         let dt = currentTime - m_LastUpdateTime
         EntityAdmin.shared.tick(deltaTime: dt)
         m_LastUpdateTime = currentTime
+    }
+}
+
+class DummyViewController: UIViewController
+{
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+        
+        view = DummyView()
+        
+        view.layer.isGeometryFlipped = true
+        let metalLayer = CAMetalLayer()
+        metalLayer.pixelFormat = .bgra8Unorm
+        metalLayer.contentsScale = view.window?.screen.scale ?? UIScreen.main.scale
+        metalLayer.frame = view.layer.bounds
+        view.layer.addSublayer(metalLayer)
+
+        EntityAdmin.shared.initializeMetalViewport(layer: metalLayer, pixelsPerUnit: 100)
+    }
+
+    override func viewDidLayoutSubviews()
+    {
+        super.viewDidLayoutSubviews()
+        let layer = EntityAdmin.shared.getMetalSurfaceComponent().layer!
+        layer.frame = view.layer.bounds
+        layer.contentsScale = view.window?.screen.scale ?? UIScreen.main.scale
+        layer.drawableSize = CGSize(width: layer.bounds.width * layer.contentsScale,
+                                    height: layer.bounds.height * layer.contentsScale)
+    }
+}
+
+class DummyView: UIView
+{
+    var lastUpdateTime: CFTimeInterval = 0
+    
+    override func draw(_ rect: CGRect) {
+        let now = CACurrentMediaTime()
+        let deltaTime: CFTimeInterval = now - lastUpdateTime
+        lastUpdateTime = now
+        EntityAdmin.shared.tick(deltaTime: deltaTime)
     }
 }

@@ -12,7 +12,7 @@ final class InputSystem: System
 {
     let requiredComponent: ComponentTypeID = Single_InputComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component, world: GameWorld)
+    func update(deltaTime: TimeInterval, component: any Component)
     {
         let inputComp = component as! Single_InputComponent
         let actionMaps = EntityAdmin.shared.getPlayerBindingsComponent().mappings

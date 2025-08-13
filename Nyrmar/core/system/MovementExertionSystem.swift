@@ -13,7 +13,7 @@ final class MovementExertionSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveExertionComponent.typeID
 
-    func update(deltaTime dt: TimeInterval, component: any Component, world: GameWorld)
+    func update(deltaTime dt: TimeInterval, component: any Component)
     {
         let moverComp = component as! MoveExertionComponent
         guard let moveStateComp = moverComp.sibling(MoveStateComponent.self) else

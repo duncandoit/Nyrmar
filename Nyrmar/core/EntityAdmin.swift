@@ -22,27 +22,28 @@ class EntityAdmin
     private var m_AnchorComponentByEntity: [Entity: Component] = [:]
     
     private var m_Systems: [System]
-    private var m_World: GameWorld!
+//    private var m_World: GameWorld!
     
     // MARK: - Singleton Components
+    // Rendering
+    private var m_ViewportEntity: Entity?
+    private weak var m_MetalSurfaceComponent: Single_MetalSurfaceComponent?
+    private weak var m_Camera2DComponent: Single_Camera2DComponent?
+    
     // Sim Clock
     private var m_SimClockEntity: Entity?
     private weak var m_SimClockComponent: Single_SimClockComponent?
-    // Sim Clock
     
     // Input
     private var m_InputEntity: Entity?
     private weak var m_InputComponent: Single_InputComponent?
-    // Input
     
     // Control Bindings
     private var m_PlayerBindingsEntity: Entity?
     private weak var m_PlayerBindingsComponent: Single_PlayerBindingsComponent?
-    // Control Bindings
     
     // Debug Avatar
     private var m_AvatarEntity: Entity!
-    // Debug Avatar
     // MARK: - End Singleton Components
     
     private init()
@@ -81,8 +82,11 @@ class EntityAdmin
 //            CameraSystem(),
                 // DebugEntity
                 // ImageAnimation
-            AvatarSyncSystem(),
-            SpawnSystem(),
+//            AvatarSyncSystem(),
+            SpriteSpawnSystem(),
+            TilemapSpawnSystem(),
+            RenderSystem(),
+//            SpawnSystem(),
             //LifeSpanSystem(),
                 // SpawnOnDestroy
 //            InputCleanupSystem()
@@ -90,16 +94,33 @@ class EntityAdmin
         
         // Initialize Singleton Components
         initializeInput()
-        initializeControlledAvatar()
+//        initializeControlledAvatar()
     }
     
-    func initializeScene(_ world: GameWorld)
+    func initializeMetalViewport(layer: CAMetalLayer, pixelsPerUnit: CGFloat = 100)
     {
-        m_World = world
+        let surfaceComp = Single_MetalSurfaceComponent(layer: layer)
+        let cameraComp = Single_Camera2DComponent()
+        cameraComp.pixelsPerUnit = pixelsPerUnit
+        
+        m_ViewportEntity = addEntity(with: surfaceComp, cameraComp)!
+        m_MetalSurfaceComponent = surfaceComp
+        m_Camera2DComponent = cameraComp
+        print("[" + #fileID + "]: " + #function + " -> Registered Metal Viewport")
+    }
+    
+    func getMetalSurfaceComponent() -> Single_MetalSurfaceComponent
+    {
+        return m_MetalSurfaceComponent!
+    }
+    
+    func getCamera2DComponent() -> Single_Camera2DComponent
+    {
+        return m_Camera2DComponent!
     }
     
     // MARK: - Set Up Singleton Components
-    func initializeInput()
+    private func initializeInput()
     {
         let inputComp = Single_InputComponent()
         let entity = addEntity(with: inputComp)!
@@ -108,20 +129,20 @@ class EntityAdmin
         print("[" + #fileID + "]: " + #function + " -> Registered input")
     }
     
-    func initializeControlledAvatar()
-    {
-        let transformComp = TransformComponent()
-        let thrallComp = ThrallComponent(controllerID: getInputComponent().controllerID)
-        let physicsComp = PhysicsMaterialComponent()
-        let forceComp = ForceAccumulatorComponent()
-        let moveStateComp = MoveStateComponent()
-        let baseStatsComp = BaseStatsComponent()
-        m_AvatarEntity = addEntity(with: transformComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
-        
-        let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
-        addComponent(avatarComp, to: m_AvatarEntity)
-        print("[" + #fileID + "]: " + #function + " -> Registered avatar")
-    }
+//    private func initializeControlledAvatar()
+//    {
+//        let transformComp = TransformComponent()
+//        let thrallComp = ThrallComponent(controllerID: getInputComponent().controllerID)
+//        let physicsComp = PhysicsMaterialComponent()
+//        let forceComp = ForceAccumulatorComponent()
+//        let moveStateComp = MoveStateComponent()
+//        let baseStatsComp = BaseStatsComponent()
+//        m_AvatarEntity = addEntity(with: transformComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
+//        
+//        let avatarComp = AvatarComponent(avatar: nil, owningEntity: m_AvatarEntity, textureName: "finalfall-logo")
+//        addComponent(avatarComp, to: m_AvatarEntity)
+//        print("[" + #fileID + "]: " + #function + " -> Registered avatar")
+//    }
     // MARK: - End Set Up Singleton Components
     
     // MARK: - Singleton Component Accessors
@@ -195,23 +216,23 @@ class EntityAdmin
     // MARK: - End Singleton Component Accessors
     
     // MARK: - Debug Avatar
-    func removeAvatar(with owningEntity: Entity)
-    {
-        guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
-        {
-            print("[" + #fileID + "]: " + #function + " -> Avatar with owningEntity:\(owningEntity) not found.")
-            return
-        }
-        
-        avatar.removeFromParent()
-        print("[" + #fileID + "]: " + #function + " -> Removed Avatar with owningEntity:\(owningEntity).")
-    }
-    
-    func clearAvatars()
-    {
-        AvatarManager.shared.removeAll()
-        removeEntities(withComponentType: AvatarComponent.typeID)
-    }
+//    func removeAvatar(with owningEntity: Entity)
+//    {
+//        guard let avatar = AvatarManager.shared.avatar(for: owningEntity) else
+//        {
+//            print("[" + #fileID + "]: " + #function + " -> Avatar with owningEntity:\(owningEntity) not found.")
+//            return
+//        }
+//        
+//        avatar.removeFromParent()
+//        print("[" + #fileID + "]: " + #function + " -> Removed Avatar with owningEntity:\(owningEntity).")
+//    }
+//    
+//    func clearAvatars()
+//    {
+//        AvatarManager.shared.removeAll()
+//        removeEntities(withComponentType: AvatarComponent.typeID)
+//    }
     // MARK: - End Debug Avatar
     
     // MARK: - ECS Accessors
@@ -295,7 +316,7 @@ class EntityAdmin
     
     func removeAllEntities()
     {
-        AvatarManager.shared.removeAll()
+//        AvatarManager.shared.removeAll()
         m_AnchorComponentByEntity.removeAll()
         m_ComponentsByType.removeAll()
         m_EntitiesByComponent.removeAll()
@@ -412,6 +433,19 @@ class EntityAdmin
         return children.isEmpty ? nil : children
     }
     
+    /// Slower than removeComponent(ofType:from:). If you have the Entity, use that one otherwise use this one.
+    func removeComponent(_ component: Component)
+    {
+        guard let entity = getEntity(forComponent: component) else
+        {
+            print("[" + #fileID + "]: " + #function + " -> Component is not already not registered with any Entity.")
+            return
+        }
+        
+        removeComponent(ofType: component.typeID(), from: entity)
+    }
+    
+    /// Faster than removeComponent(). If you have the Entity, use this one otherwise use that one.
     func removeComponent(ofType componentID: ComponentTypeID, from entity: Entity)
     {
         guard let anchorComp = m_AnchorComponentByEntity[entity] else
@@ -504,7 +538,8 @@ class EntityAdmin
             {
                 // Any other component that the system needs should be searched
                 // for in the siblings to this component.
-                system.update(deltaTime: deltaTime, component: component, world: m_World)
+//                system.update(deltaTime: deltaTime, component: component, world: m_World)
+                system.update(deltaTime: deltaTime, component: component)
             }
         }
     }
