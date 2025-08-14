@@ -182,7 +182,7 @@ class EntityAdmin
         let moveStateComp = MoveStateComponent()
         let baseStatsComp = BaseStatsComponent()
 
-        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
+        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, /*physicsComp, forceComp,*/ moveStateComp, baseStatsComp)
         m_TestSpriteEntity = entity
     }
     

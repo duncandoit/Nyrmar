@@ -53,7 +53,7 @@ class GameViewController: UIViewController
             id:             1,
             type:           .touch,
             phase:          phase,
-            worldLocation:  screenSpacePoint
+            screenLocation:  screenSpacePoint
         )
         
         EntityAdmin.shared.inputComponent().pointerEvents.append(pointerData)
@@ -61,21 +61,21 @@ class GameViewController: UIViewController
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        for t in touches { touch(at: t.location(in: view), phase: .down) }
+        if let t = touches.first { touch(at: t.location(in: view), phase: .down) }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        for t in touches { touch(at: t.location(in: view), phase: .dragged) }
+        if let t = touches.first { touch(at: t.location(in: view), phase: .dragged) }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        for t in touches { touch(at: t.location(in: view), phase: .up) }
+        if let t = touches.first { touch(at: t.location(in: view), phase: .up) }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        for t in touches { touch(at: t.location(in: view), phase: .up) }
+        if let t = touches.first { touch(at: t.location(in: view), phase: .up) }
     }
 }

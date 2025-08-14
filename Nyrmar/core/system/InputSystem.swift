@@ -113,12 +113,12 @@ final class InputSystem: System
                 
                 for pointerData in inputComp.pointerEvents
                 {
-                    let worldSpacePoint = pointerData.worldLocation
+                    let screenSpacePoint = pointerData.screenLocation
                     
                     inputComp.commandQueue.append(PlayerCommand(
                         controllerID: controllerID,
                         intent: actionMap.intent,
-                        value: .screenPosition(worldSpacePoint),
+                        value: .screenPosition(screenSpacePoint),
                         timestamp: quantizedTime
                     ))
                 }

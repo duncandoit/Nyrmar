@@ -74,6 +74,10 @@ final class CommandSystem: System
                     exertionComp = MoveExertionComponent()
                     EntityAdmin.shared.addSibling(exertionComp!, to: thrallComp)
                 }
+                
+                // Hysteresis: at least one world pixel
+                let ppu = CGFloat(cameraComp.pixelsPerUnit)
+                exertionComp.arriveEpsilon = max(exertionComp.arriveEpsilon, 1.0 / ppu)
                 exertionComp.teleportTo      = nil
                 exertionComp.deltaWorld      = nil
                 exertionComp.velocityDesired = nil

@@ -54,6 +54,7 @@ final class MovementStateSystem: System
         }
 
         // Velocity integration
+        let prevPosition = position
         if moveStateComp.velocity.length > 0 && deltaTime > 0
         {
             let deltaVelocity = moveStateComp.velocity * deltaTime
@@ -65,12 +66,16 @@ final class MovementStateSystem: System
         // Seek arrival check (snap & clear when close)
         if let targetPosition = exertionComp.seekTarget
         {
-            let deltaX = targetPosition.x - position.x
-            let deltaY = targetPosition.y - position.y
-            let distance = sqrt(deltaX*deltaX + deltaY*deltaY)
+            // crossed target?
+            let vPrev = CGVector(dx: targetPosition.x - prevPosition.x, dy: targetPosition.y - prevPosition.y)
+            let vNow  = CGVector(dx: targetPosition.x - position.x, dy: targetPosition.y - position.y)
+            let crossed = (vPrev.dx * vNow.dx + vPrev.dy * vNow.dy) <= 0
+
+            let dx = targetPosition.x - position.x, dy = targetPosition.y - position.y
+            let distance = sqrt(dx*dx + dy*dy)
             moveStateComp.remainingDistance = distance
-            
-            if distance <= exertionComp.arriveEpsilon
+
+            if crossed || distance <= exertionComp.seekArriveEpsilon
             {
                 position = targetPosition
                 exertionComp.seekTarget = nil

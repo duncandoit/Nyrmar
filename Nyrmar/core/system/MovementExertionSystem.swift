@@ -46,8 +46,10 @@ final class MovementExertionSystem: System
             moveStateComp.isSeeking = true
             moveStateComp.currentSeekTarget = target
             moveStateComp.remainingDistance = deltaDistance
+            
             let speed = exertionComp.seekSpeed ?? baseStatsComp.moveSpeed
-            targetVelocity = deltaDistance > 0 ? targetVector.normalized() * speed : .zero
+            let cappedSpeed = min(speed, deltaDistance / deltaTime)
+            targetVelocity = deltaDistance > 0 ? targetVector.normalized() * cappedSpeed : .zero
             wantVelocity = true
         }
 

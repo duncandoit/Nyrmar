@@ -52,7 +52,7 @@ struct PointerData
   let id: Int                // touch’s fingerIndex or always 0 for mouse
   let type: PointerType
   let phase: PointerPhase
-  let worldLocation: CGPoint
+  let screenLocation: CGPoint
 }
 
 enum PlayerCommandIntent: String, Codable
