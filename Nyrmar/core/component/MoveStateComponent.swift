@@ -7,6 +7,8 @@
 
 import CoreFoundation
 
+/// Current data on the status of the entity's movement.
+/// Mutated by both the `MovementStateSystem` and `MovementExertionSystem`.
 final class MoveStateComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: MoveStateComponent.self)

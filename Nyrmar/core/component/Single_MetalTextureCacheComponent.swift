@@ -7,6 +7,8 @@
 
 import MetalKit
 
+/// Singleton Component: Should have only one instance per `EntityAdmin`
+/// Caches `SpriteMap` and `MTLTexture` for the GPU
 final class Single_MetalTextureCacheComponent: Component
 {
     static let typeID = componentTypeID(for: Single_MetalTextureCacheComponent.self)

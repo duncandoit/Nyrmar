@@ -7,6 +7,7 @@
 
 import CoreFoundation
 
+/// Adds the entity to the `PhysicsSystem` with these characteristics.
 final class PhysicsMaterialComponent: Component
 {
     static let typeID = componentTypeID(for: PhysicsMaterialComponent.self)

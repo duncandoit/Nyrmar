@@ -7,6 +7,8 @@
 
 import Foundation
 
+/// Singleton Component: Should have only one instance per `EntityAdmin`
+/// Maintains quantized frame time information
 final class Single_SimClockComponent: Component
 {
     static let typeID = componentTypeID(for: Single_SimClockComponent.self)

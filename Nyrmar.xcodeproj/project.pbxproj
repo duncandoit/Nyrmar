@@ -34,14 +34,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				core/component/CollisionComponent.swift,
-				core/component/ControllerComponent.swift,
 				core/component/Single_InputComponent.swift,
 				core/component/Single_MetalTextureCacheComponent.swift,
 				core/component/Single_PlayerBindingsComponent.swift,
 				core/component/Single_SimClockComponent.swift,
 				core/component/SpriteComponents.swift,
 				core/component/TilemapComponents.swift,
-				core/Entity.swift,
 				core/shader/sprite2d.metal,
 				core/system/InputCleanupSystem.swift,
 				core/system/InputSystem.swift,

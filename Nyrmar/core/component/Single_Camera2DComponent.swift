@@ -7,6 +7,8 @@
 
 import CoreFoundation
 
+/// Singleton Component: Should have only one instance per `EntityAdmin`
+/// Camera state.
 final class Single_Camera2DComponent: Component
 {
     static let typeID = componentTypeID(for: Single_Camera2DComponent.self)

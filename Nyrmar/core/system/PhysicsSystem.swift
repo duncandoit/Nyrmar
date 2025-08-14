@@ -12,10 +12,10 @@ final class PhysicsSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime dt: TimeInterval, component: any Component)
     {
         let moveStateComp = component as! MoveStateComponent
-        guard let physicsComp: PhysicsMaterialComponent = moveStateComp.sibling(PhysicsMaterialComponent.self) else
+        guard let physicsComp = moveStateComp.sibling(PhysicsMaterialComponent.self) else
         {
             return
         }
@@ -23,6 +23,9 @@ final class PhysicsSystem: System
         {
             return
         }
+        
+        let deltaTime = CGFloat(max(dt, 0))
+        let inverseMass: CGFloat = 1.0 / physicsComp.mass
 
         // Kinematic / immovable entities: consume impulses, no physics adjustments.
         if physicsComp.mass <= 0
@@ -32,7 +35,7 @@ final class PhysicsSystem: System
                 forceAccumulator.impulses.removeAll(keepingCapacity: true)
                 if forceAccumulator.forceDecayPerSecond > 0
                 {
-                    let dampingMultiplier = exp(-physicsComp.linearDamping * CGFloat(max(deltaTime, 0)))
+                    let dampingMultiplier = exp(-physicsComp.linearDamping * deltaTime)
                     forceAccumulator.force = forceAccumulator.force * dampingMultiplier
                 }
             }
@@ -40,16 +43,14 @@ final class PhysicsSystem: System
             return
         }
 
-        let deltaTimeScalar = CGFloat(max(deltaTime, 0))
-        let inverseMass: CGFloat = 1.0 / physicsComp.mass
-
         // Accumulate accelerations from Exertion
         var accumulatedAcceleration = moveStateComp.acceleration
 
         // Gravity (example world units: points/s^2)
         if physicsComp.gravityScale != 0
         {
-            let gravityAcceleration = CGVector(dx: 0, dy: -980) * physicsComp.gravityScale
+            //let gravityAcceleration = CGVector(dx: 0, dy: -980) * physicsComp.gravityScale
+            let gravityAcceleration = CGVector(dx: 0, dy: 980) * physicsComp.gravityScale
             accumulatedAcceleration = accumulatedAcceleration + gravityAcceleration
         }
 
@@ -60,10 +61,11 @@ final class PhysicsSystem: System
             {
                 accumulatedAcceleration = accumulatedAcceleration + (forceAccumulator.force * inverseMass)
 
-                if forceAccumulator.forceDecayPerSecond > 0, deltaTimeScalar > 0
+                if forceAccumulator.forceDecayPerSecond > 0, deltaTime > 0
                 {
-                    let decayMultiplier = exp(-forceAccumulator.forceDecayPerSecond * deltaTimeScalar)
+                    let decayMultiplier = exp(-forceAccumulator.forceDecayPerSecond * deltaTime)
                     forceAccumulator.force = forceAccumulator.force * decayMultiplier
+                    
                     if forceAccumulator.force.length < 0.0001
                     {
                         forceAccumulator.force = .zero
@@ -91,15 +93,15 @@ final class PhysicsSystem: System
         }
 
         // Integrate velocity (semi-implicit Euler for v)
-        if deltaTimeScalar > 0
+        if deltaTime > 0
         {
-            moveStateComp.velocity = moveStateComp.velocity + (accumulatedAcceleration * deltaTimeScalar)
+            moveStateComp.velocity = moveStateComp.velocity + (accumulatedAcceleration * deltaTime)
         }
 
         // Exponential damping (framerate independent)
-        if physicsComp.linearDamping > 0, deltaTimeScalar > 0
+        if physicsComp.linearDamping > 0, deltaTime > 0
         {
-            let dampingMultiplier = exp(-physicsComp.linearDamping * deltaTimeScalar)
+            let dampingMultiplier = exp(-physicsComp.linearDamping * deltaTime)
             moveStateComp.velocity = moveStateComp.velocity * dampingMultiplier
         }
 
@@ -113,7 +115,7 @@ final class PhysicsSystem: System
             moveStateComp.velocity = moveStateComp.velocity.clampedMagnitude(maxVelocityFromThrall)
         }
 
-        // Acceleration is a per-tick result; clear after use.
+        // Acceleration is a per-tick result
         moveStateComp.acceleration = .zero
         // MovementStateSystem will apply: position += velocity * dt.
     }

@@ -7,11 +7,14 @@
 
 import CoreFoundation
 
-// Which source authored the move intent (for arbitration, if needed)
-enum MovementLayer: UInt8 { case player, ai, script, physics }
+/// Source that authored the move intent 
+enum MovementLayer: UInt8
+{
+    case player, ai, script, physics
+}
 
-/// Declarative intents (input) + constraints (policy)
-/// Exertion reads intent fields (seekTarget, velocityDesired, etc.) and policy (maxAcceleration, maxSpeed, priorities).
+/// Declarative intents + policy constraints
+/// `MovementExertionSystem` reads intent fields (seekTarget, velocityDesired, etc.) and policy (maxAcceleration, priorities).
 /// It arbitrates multiple writers (player, AI, etc), resolves conflicts, and outputs desired kinematics.
 final class MoveExertionComponent: Component
 {

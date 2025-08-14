@@ -11,7 +11,7 @@ final class SimulationClockSystem: System
 {
     let requiredComponent: ComponentTypeID = Single_SimClockComponent.typeID
     
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime dt: TimeInterval, component: any Component)
     {
         guard let clockComp = component as? Single_SimClockComponent else
         {
@@ -19,8 +19,8 @@ final class SimulationClockSystem: System
         }
         
         // clamp bad frames
-        let dt = min(max(deltaTime, 0.0), 0.25)
-        clockComp.accumulator += dt
+        let deltaTime = min(max(dt, 0.0), 0.25)
+        clockComp.accumulator += deltaTime
         
         // cap steps/frame if desired to avoid spiral-of-death
         var steps = 0

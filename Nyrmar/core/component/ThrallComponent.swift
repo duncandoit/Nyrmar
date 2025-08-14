@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Binds an entity to the `PlayerCommand` authored by the `ControllerID`
 class ThrallComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: ThrallComponent.self)

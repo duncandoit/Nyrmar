@@ -15,7 +15,7 @@ final class MovementStateSystem: System
     func update(deltaTime dt: TimeInterval, component: any Component)
     {
         let moveStateComp = component as! MoveStateComponent
-        guard let moverComp = moveStateComp.sibling(MoveExertionComponent.self) else
+        guard let exertionComp = moveStateComp.sibling(MoveExertionComponent.self) else
         {
             return
         }
@@ -32,50 +32,50 @@ final class MovementStateSystem: System
         var position = transformComp.position
         moveStateComp.lastAppliedDelta = .zero
 
-        // Teleport (one-shot; highest precedence)
-        if let point = moverComp.teleportTo
+        // Teleport
+        if let targetPosition = exertionComp.teleportTo
         {
-            position = point
+            position = targetPosition
             moveStateComp.velocity = .zero
             moveStateComp.acceleration = .zero
             moveStateComp.isSeeking = false
             moveStateComp.currentSeekTarget = nil
             moveStateComp.remainingDistance = 0
-            moverComp.teleportTo = nil
+            exertionComp.teleportTo = nil
         }
 
         // One-shot delta
-        if let delta = moverComp.deltaWorld
+        if let deltaWorld = exertionComp.deltaWorld
         {
-            position.x += delta.dx
-            position.y += delta.dy
-            moveStateComp.lastAppliedDelta = delta
-            moverComp.deltaWorld = nil
+            position.x += deltaWorld.dx
+            position.y += deltaWorld.dy
+            moveStateComp.lastAppliedDelta = deltaWorld
+            exertionComp.deltaWorld = nil
         }
 
         // Velocity integration
         if moveStateComp.velocity.length > 0 && deltaTime > 0
         {
-            let dv = moveStateComp.velocity * deltaTime
-            position.x += dv.dx
-            position.y += dv.dy
-            moveStateComp.lastAppliedDelta = moveStateComp.lastAppliedDelta + dv
+            let deltaVelocity = moveStateComp.velocity * deltaTime
+            position.x += deltaVelocity.dx
+            position.y += deltaVelocity.dy
+            moveStateComp.lastAppliedDelta = moveStateComp.lastAppliedDelta + deltaVelocity
         }
 
         // Seek arrival check (snap & clear when close)
-        if let targetPosition = moverComp.seekTarget
+        if let targetPosition = exertionComp.seekTarget
         {
-            let dx = targetPosition.x - position.x
-            let dy = targetPosition.y - position.y
-            let dist = sqrt(dx*dx + dy*dy)
-            moveStateComp.remainingDistance = dist
-            if dist <= moverComp.arriveEpsilon
+            let deltaX = targetPosition.x - position.x
+            let deltaY = targetPosition.y - position.y
+            let distance = sqrt(deltaX*deltaX + deltaY*deltaY)
+            moveStateComp.remainingDistance = distance
+            
+            if distance <= exertionComp.arriveEpsilon
             {
                 position = targetPosition
-                moverComp.seekTarget = nil
+                exertionComp.seekTarget = nil
                 moveStateComp.isSeeking = false
                 moveStateComp.currentSeekTarget = nil
-                // Optionally zero velocity at arrival:
                 moveStateComp.velocity = .zero
                 moveStateComp.acceleration = .zero
             }
@@ -97,12 +97,12 @@ final class MovementStateSystem: System
         {
             moveStateComp.velocity = moveStateComp.velocity.clampedMagnitude(maxVelocity)
         }
-        if let rect = moverComp.clampRect
+        if let clampRect = exertionComp.clampRect
         {
-            position.x = min(max(position.x, rect.minX), rect.maxX)
-            position.y = min(max(position.y, rect.minY), rect.maxY)
+            position.x = min(max(position.x, clampRect.minX), clampRect.maxX)
+            position.y = min(max(position.y, clampRect.minY), clampRect.maxY)
         }
-        if let grid = moverComp.snapToGrid, grid > 0
+        if let grid = exertionComp.snapToGrid, grid > 0
         {
             position.x = (position.x / grid).rounded() * grid
             position.y = (position.y / grid).rounded() * grid
@@ -110,6 +110,6 @@ final class MovementStateSystem: System
 
         // Commit
         transformComp.position = position
-        moveStateComp.isSettled = moveStateComp.isSettled && moveStateComp.velocity.length < 0.001 && moverComp.seekTarget == nil
+        moveStateComp.isSettled = moveStateComp.isSettled && moveStateComp.velocity.length < 0.001 && exertionComp.seekTarget == nil
     }
 }

@@ -7,6 +7,8 @@
 
 import MetalKit
 
+typealias Entity = UUID
+
 class EntityAdmin
 {
     static let shared: EntityAdmin = EntityAdmin()
@@ -23,6 +25,7 @@ class EntityAdmin
     private var m_Systems: [System]
     
     // MARK: - Singleton Components
+    
     // Rendering
     private var m_ViewportEntity: Entity?
     private weak var m_MetalSurfaceComponent: Single_MetalSurfaceComponent?
@@ -89,7 +92,7 @@ class EntityAdmin
             RenderSystem(),
                 //LifeSpanSystem,
                 // SpawnOnDestroy
-//            InputCleanupSystem()
+            //InputCleanupSystem()
         ]
         
         // Initialize Singleton Components
@@ -179,7 +182,7 @@ class EntityAdmin
         let moveStateComp = MoveStateComponent()
         let baseStatsComp = BaseStatsComponent()
 
-        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, /*physicsComp, forceComp,*/ moveStateComp, baseStatsComp)
+        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
         m_TestSpriteEntity = entity
     }
     

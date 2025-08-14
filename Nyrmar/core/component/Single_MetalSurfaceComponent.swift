@@ -7,6 +7,8 @@
 
 import QuartzCore
 
+/// Singleton Component: Should have only one instance per `EntityAdmin`
+/// Metal context for drawing to the GPU
 final class Single_MetalSurfaceComponent: Component
 {
     static let typeID = componentTypeID(for: Single_MetalSurfaceComponent.self)

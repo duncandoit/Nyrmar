@@ -7,6 +7,8 @@
 
 import Foundation
 
+typealias ControllerID = UUID
+
 enum GenericInput: Hashable
 {
     // Mouse or touch
@@ -95,6 +97,8 @@ struct ActionMapping
     let transform: (Float) -> Float
 }
 
+/// Singleton Component: Should have only one instance per `EntityAdmin`
+/// Source of the local player's `ControllerID` and inputs.
 final class Single_InputComponent: Component
 {
     static let typeID = componentTypeID(for: Single_InputComponent.self)

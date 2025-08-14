@@ -9,21 +9,27 @@ import Foundation
 import Metal
 import simd
 
-/// optional: spawn → TilemapRenderComponent
+/// Consumed by the `TilemapSpawnSystem` to be replaced with a `TilemapRenderComponent`
 final class TilemapPrefabComponent: Component
 {
     static let typeID = componentTypeID(for: TilemapPrefabComponent.self)
     var siblings: SiblingContainer?
+    
     var tilesetTexture: String
     var tileSize: CGSize
     var gridSize: (w: Int, h: Int)
-    var indices: [Int]                                   // w*h
-    init(tilesetTexture: String, tileSize: CGSize, gridSize: (Int,Int), indices: [Int]) {
-        self.tilesetTexture = tilesetTexture; self.tileSize = tileSize; self.gridSize = gridSize; self.indices = indices
+    var indices: [Int] // w*h
+    
+    init(tilesetTexture: String, tileSize: CGSize, gridSize: (Int,Int), indices: [Int])
+    {
+        self.tilesetTexture = tilesetTexture
+        self.tileSize = tileSize
+        self.gridSize = gridSize
+        self.indices = indices
     }
 }
 
-/// (render path stub)
+/// Mutated by the `RenderSystem`
 final class TilemapRenderComponent: Component
 {
     static let typeID = componentTypeID(for: TilemapRenderComponent.self)

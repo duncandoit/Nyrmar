@@ -15,12 +15,12 @@ final class MovementExertionSystem: System
 
     func update(deltaTime dt: TimeInterval, component: any Component)
     {
-        let moverComp = component as! MoveExertionComponent
-        guard let moveStateComp = moverComp.sibling(MoveStateComponent.self) else
+        let exertionComp = component as! MoveExertionComponent
+        guard let moveStateComp = exertionComp.sibling(MoveStateComponent.self) else
         {
             return
         }
-        guard let transformComp = moverComp.sibling(TransformComponent.self) else
+        guard let transformComp = exertionComp.sibling(TransformComponent.self) else
         {
             return
         }
@@ -36,25 +36,25 @@ final class MovementExertionSystem: System
         // Teleport/delta handled by MovementStateSystem
         // Do not generate velocity for them
         // Seek -> desired velocity toward target
-        if let target = moverComp.seekTarget
+        if let target = exertionComp.seekTarget
         {
-            let to = CGVector(
+            let targetVector = CGVector(
                 dx: target.x - transformComp.position.x,
                 dy: target.y - transformComp.position.y
             )
-            let dist = to.length
+            let deltaDistance = targetVector.length
             moveStateComp.isSeeking = true
             moveStateComp.currentSeekTarget = target
-            moveStateComp.remainingDistance = dist
-            let speed = moverComp.seekSpeed ?? baseStatsComp.moveSpeed
-            targetVelocity = dist > 0 ? to.normalized() * speed : .zero
+            moveStateComp.remainingDistance = deltaDistance
+            let speed = exertionComp.seekSpeed ?? baseStatsComp.moveSpeed
+            targetVelocity = deltaDistance > 0 ? targetVector.normalized() * speed : .zero
             wantVelocity = true
         }
 
         // Direct desired continuous velocity
-        if let target = moverComp.velocityDesired
+        if let velocityDesired = exertionComp.velocityDesired
         {
-            targetVelocity = target
+            targetVelocity = velocityDesired
             wantVelocity = true
         }
 
@@ -62,41 +62,41 @@ final class MovementExertionSystem: System
         if wantVelocity
         {
             let currentVelocity = moveStateComp.velocity
-            var aMax = moverComp.maxAcceleration ?? .greatestFiniteMagnitude
+            var maxVelocity = exertionComp.maxAcceleration ?? .greatestFiniteMagnitude
             if deltaTime == 0
             {
                 // snap if no time
-                aMax = .greatestFiniteMagnitude
+                maxVelocity = .greatestFiniteMagnitude
             }
             let deltaVelocity = targetVelocity - currentVelocity
-            let step = deltaVelocity.clampedMagnitude(aMax * deltaTime)
-            var next = currentVelocity + step
-            if let vmax = baseStatsComp.moveSpeedMax
+            let velocityStep = deltaVelocity.clampedMagnitude(maxVelocity * deltaTime)
+            var nextVelocity = currentVelocity + velocityStep
+            if let maxSpeed = baseStatsComp.moveSpeedMax
             {
-                next = next.clampedMagnitude(vmax)
+                nextVelocity = nextVelocity.clampedMagnitude(maxSpeed)
             }
             
-            moveStateComp.acceleration = deltaTime > 0 ? (next - currentVelocity) * (1.0 / deltaTime) : .zero
-            moveStateComp.velocity = next
-            moveStateComp.isSettled = next.length < 0.001 && moverComp.seekTarget == nil && moverComp.velocityDesired == nil
+            moveStateComp.acceleration = deltaTime > 0 ? (nextVelocity - currentVelocity) * (1.0 / deltaTime) : .zero
+            moveStateComp.velocity = nextVelocity
+            moveStateComp.isSettled = nextVelocity.length < 0.001 && exertionComp.seekTarget == nil && exertionComp.velocityDesired == nil
         }
         else
         {
             // No velocity intent -> decay toward rest under acceleration cap
             let currentVelocity = moveStateComp.velocity
-            if currentVelocity.length > 0, let aMax = moverComp.maxAcceleration, deltaTime > 0
+            if currentVelocity.length > 0, let maxVelocity = exertionComp.maxAcceleration, deltaTime > 0
             {
-                let dec = (currentVelocity * -1).clampedMagnitude(aMax * deltaTime)
-                let next = currentVelocity + dec
-                moveStateComp.acceleration = (next - currentVelocity) * (1.0 / deltaTime)
-                moveStateComp.velocity = next
-                moveStateComp.isSettled = next.length < 0.001
+                let deceleration = (currentVelocity * -1).clampedMagnitude(maxVelocity * deltaTime)
+                let nextVelocity = currentVelocity + deceleration
+                moveStateComp.acceleration = (nextVelocity - currentVelocity) * (1.0 / deltaTime)
+                moveStateComp.velocity = nextVelocity
+                moveStateComp.isSettled = nextVelocity.length < 0.001
             }
             else
             {
                 moveStateComp.acceleration = .zero
                 
-                // keep current velocity (e.g., external systems may manage it)
+                // keep current velocity (external systems may manage it)
                 moveStateComp.isSettled = moveStateComp.velocity.length < 0.001
             }
         }

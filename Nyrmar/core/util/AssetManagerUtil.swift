@@ -7,14 +7,13 @@
 
 import MetalKit
 
-enum AssetLoaderUtil {
-    static let textureExts = ["ktx2","png","jpg","jpeg"]
-
+enum AssetLoaderUtil
+{
     @inline(__always)
     static func loadTexture(name: String, loader: MTKTextureLoader, bundle: Bundle = .main) -> MTLTexture?
     {
-        // 1) Asset catalog
-        if let t = try? loader.newTexture(
+        // Asset catalog
+        if let texture = try? loader.newTexture(
             name: name,
             scaleFactor: 1.0,
             bundle: bundle,
@@ -24,14 +23,15 @@ enum AssetLoaderUtil {
                 .textureStorageMode: NSNumber(value: MTLStorageMode.private.rawValue)
             ])
         {
-            return t
+            return texture
         }
         
-        // 2) Bundle subdir fallback
+        // Bundle subdir fallback
+        let textureExts = ["ktx2","png","jpg","jpeg"]
         for ext in textureExts
         {
             if let url = bundle.url(forResource: name, withExtension: ext, subdirectory: "assets/texture"),
-               let t = try? loader.newTexture(
+               let texture = try? loader.newTexture(
                 URL: url,
                 options: [
                     .SRGB: true as NSNumber,
@@ -39,7 +39,7 @@ enum AssetLoaderUtil {
                     .textureStorageMode: NSNumber(value: MTLStorageMode.private.rawValue)
                ])
             {
-                return t
+                return texture
             }
         }
         return nil
@@ -48,36 +48,52 @@ enum AssetLoaderUtil {
     @inline(__always)
     static func loadSpriteMap(name: String, bundle: Bundle = .main) -> Single_MetalTextureCacheComponent.SpriteMap?
     {
-        guard let url = bundle.url(forResource: name, withExtension: "json", subdirectory: "assets/spritemap"),
-              let data = try? Data(contentsOf: url),
-              let map = try? JSONDecoder().decode(Single_MetalTextureCacheComponent.SpriteMap.self, from: data)
-        else
+        guard let url = bundle.url(forResource: name, withExtension: "json", subdirectory: "assets/spritemap") else
         {
+            print("[" + #fileID + "]: " + #function + " -> Failed: Could not find file.")
             return nil
         }
+        
+        guard let data = try? Data(contentsOf: url) else
+        {
+            print("[" + #fileID + "]: " + #function + " -> Failed: Could not read file.")
+            return nil
+        }
+        
+        guard let map = try? JSONDecoder().decode(Single_MetalTextureCacheComponent.SpriteMap.self, from: data) else
+        {
+            print("[" + #fileID + "]: " + #function + " -> Failed: Could not decode file.")
+            return nil
+        }
+        
         return map
     }
 
     @inline(__always)
     static func makeGridUVLUT(for texture: MTLTexture, tileSize: CGSize) -> [SIMD4<Float>]?
     {
-        let tw = Int(tileSize.width), th = Int(tileSize.height)
-        guard tw > 0, th > 0, texture.width >= tw, texture.height >= th else
+        let tileWidth = Int(tileSize.width)
+        let tileHeight = Int(tileSize.height)
+        guard tileWidth > 0, tileHeight > 0, texture.width >= tileWidth, texture.height >= tileHeight else
         {
             return nil
         }
         
-        let cols = texture.width / tw, rows = texture.height / th
-        let total = max(1, cols * rows)
-        var out = [SIMD4<Float>](repeating: .zero, count: total)
-        let W = Float(texture.width), H = Float(texture.height)
+        let columns = texture.width / tileWidth
+        let rows = texture.height / tileHeight
+        let totalSections = max(1, columns * rows)
+        var out = [SIMD4<Float>](repeating: .zero, count: totalSections)
+        let fWidth = Float(texture.width)
+        let fHeight = Float(texture.height)
         
-        for i in 0..<total
+        for i in 0 ..< totalSections
         {
-            let c = i % cols
-            let r = i / cols
-            let u0 = Float(c * tw) / W, v0 = Float(r * th) / H
-            let u1 = Float((c + 1) * tw) / W, v1 = Float((r + 1) * th) / H
+            let column = i % columns
+            let row = i / columns
+            let u0 = Float(column * tileWidth) / fWidth
+            let v0 = Float(row * tileHeight) / fHeight
+            let u1 = Float((column + 1) * tileWidth) / fWidth
+            let v1 = Float((row + 1) * tileHeight) / fHeight
             out[i] = SIMD4<Float>(u0, v0, u1, v1)
         }
         return out

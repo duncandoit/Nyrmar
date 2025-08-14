@@ -7,6 +7,7 @@
 
 import CoreFoundation
 
+/// Any additional force to be applied to the entity in the `PhysicsSystem`.
 final class ForceAccumulatorComponent: Component
 {
     static let typeID = componentTypeID(for: ForceAccumulatorComponent.self)

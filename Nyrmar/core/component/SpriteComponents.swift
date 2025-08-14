@@ -15,7 +15,7 @@ enum SpriteSource
     case atlas(map: String, frame: String)
 }
 
-/// For authoring-only (to be resolved)
+/// Consumed by the `SpriteSpawnSystem` to be replaced with a `SpriteRenderComponent`
 final class SpritePrefabComponent: Component
 {
     static let typeID = componentTypeID(for: SpritePrefabComponent.self)
@@ -31,7 +31,7 @@ final class SpritePrefabComponent: Component
     }
 }
 
-/// GPU-resolved, used by RenderSystem
+/// Mutated by the `RenderSystem`
 final class SpriteRenderComponent: Component
 {
     static let typeID = componentTypeID(for: SpriteRenderComponent.self)

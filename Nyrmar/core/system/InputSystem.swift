@@ -56,15 +56,15 @@ final class InputSystem: System
             }
             
             let actionValue = actionMap.transform(rawInputValue)
-            let lastInputValue = inputComp.lastReported1D[axis] ?? 0
-            let inDZ = abs(actionValue) < actionMap.deadZone
-            let wasInDZ = abs(lastInputValue) < actionMap.deadZone
-            if inDZ != wasInDZ || abs(actionValue - lastInputValue) >= 0.02
+            let lastActionValue = inputComp.lastReported1D[axis] ?? 0
+            let inDeadZone = abs(actionValue) < actionMap.deadZone
+            let wasInDeadZone = abs(lastActionValue) < actionMap.deadZone
+            if inDeadZone != wasInDeadZone || abs(actionValue - lastActionValue) >= 0.02
             {
                 inputComp.commandQueue.append(PlayerCommand(
                     controllerID: controllerID,
                     intent: actionMap.intent,
-                    value: .axis1D(inDZ ? 0 : actionValue),
+                    value: .axis1D(inDeadZone ? 0 : actionValue),
                     timestamp: quantizedTime
                 ))
                 inputComp.lastReported1D[axis] = actionValue
@@ -81,23 +81,23 @@ final class InputSystem: System
             
             let actionValueX = actionMap.transform(inputComp.analog1D[xA] ?? 0)
             let actionValueY = actionMap.transform(inputComp.analog1D[yA] ?? 0)
-            let point = CGPoint(x: CGFloat(actionValueX), y: CGFloat(actionValueY))
+            let actionValue = CGPoint(x: CGFloat(actionValueX), y: CGFloat(actionValueY))
             let key = "\(xA)+\(yA)"
-            let lastInputValue = inputComp.lastReported2D[key] ?? .zero
-            let mag = hypot(point.x, point.y)
-            let lastMag = hypot(lastInputValue.x, lastInputValue.y)
-            let inDZ = mag < CGFloat(actionMap.deadZone)
-            let wasInDZ = lastMag < CGFloat(actionMap.deadZone)
-            let movedEnough = hypot(point.x - lastInputValue.x, point.y - lastInputValue.y) >= 0.02
-            if inDZ != wasInDZ || movedEnough
+            let lastActionValue = inputComp.lastReported2D[key] ?? .zero
+            let magnitute = hypot(actionValue.x, actionValue.y)
+            let lastMagnitute = hypot(lastActionValue.x, lastActionValue.y)
+            let inDeadZone = magnitute < CGFloat(actionMap.deadZone)
+            let wasInDeadZone = lastMagnitute < CGFloat(actionMap.deadZone)
+            let movedEnough = hypot(actionValue.x - lastActionValue.x, actionValue.y - lastActionValue.y) >= 0.02
+            if inDeadZone != wasInDeadZone || movedEnough
             {
                 inputComp.commandQueue.append(PlayerCommand(
                     controllerID: controllerID,
                     intent: actionMap.intent,
-                    value: .axis2D(inDZ ? .zero : point),
+                    value: .axis2D(inDeadZone ? .zero : actionValue),
                     timestamp: quantizedTime
                 ))
-                inputComp.lastReported2D[key] = point
+                inputComp.lastReported2D[key] = actionValue
             }
         }
 
