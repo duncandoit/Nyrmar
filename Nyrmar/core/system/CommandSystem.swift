@@ -36,6 +36,16 @@ final class CommandSystem: System
             switch (command.intent, command.value)
             {
                 
+            case (.jump, .screenPosition(let screenSpacePoint)):
+                
+                var forceComp: ForceAccumulatorComponent! = thrallComp.sibling(ForceAccumulatorComponent.self)
+                if forceComp == nil
+                {
+                    forceComp = ForceAccumulatorComponent()
+                    EntityAdmin.shared.addSibling(forceComp!, to: thrallComp)
+                }
+                forceComp.impulses.append(CGVector(dx: 0, dy: -200))
+                
             case (.moveToLocation, .screenPosition(let screenSpacePoint)):
                 
                 // No viewport yet. Ignore this tick.
@@ -83,21 +93,6 @@ final class CommandSystem: System
                 exertionComp.velocityDesired = nil
                 exertionComp.seekTarget      = worldSpacePoint
                 exertionComp.seekSpeed       = nil
-            
-            case (.moveToLocation, .axis2D(let worldSpacePoint)):
-                
-                var mover: MoveExertionComponent! = thrallComp.sibling(MoveExertionComponent.self)
-                if mover == nil
-                {
-                    mover = MoveExertionComponent()
-                    EntityAdmin.shared.addSibling(mover!, to: thrallComp)
-                }
-                mover.teleportTo      = nil             // cancel any pending snap
-                mover.deltaWorld      = nil             // cancel one-shot delta
-                mover.velocityDesired = nil             // avoid fighting the seek
-                mover.seekTarget      = worldSpacePoint // primary instruction
-                mover.seekSpeed       = nil             // use mover.moveSpeed
-                //mover.faceTarget      = worldSpacePoint
 
             //case (.move, .axis2D(let vector)):
             //

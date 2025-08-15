@@ -75,7 +75,7 @@ final class MovementStateSystem: System
             let distance = sqrt(dx*dx + dy*dy)
             moveStateComp.remainingDistance = distance
 
-            if crossed || distance <= exertionComp.seekArriveEpsilon
+            if crossed || distance <= exertionComp.arriveEpsilon
             {
                 position = targetPosition
                 exertionComp.seekTarget = nil

@@ -9,7 +9,7 @@ import Foundation
 
 typealias ControllerID = UUID
 
-enum GenericInput: Hashable
+enum GenericInput: Hashable, Codable
 {
     // Mouse or touch
     case pointerDown, pointerMoved, pointerUp, pointerTap, pointerLongPress
@@ -81,20 +81,88 @@ struct PlayerCommand: Codable
     let timestamp: TimeInterval
 }
 
-enum RawInputSpec
+enum AxisCurve: Hashable, Codable
 {
-    case digital(Set<GenericInput>)
-    case analog1D(GenericInput)
-    case analog2D(x: GenericInput, y: GenericInput)
-    case pointer
+    case linear
+    case power(exp: Float)
+    case expo(base: Float)
 }
 
-struct ActionMapping
+enum DigitalEdgePolicy: Hashable, Codable
+{
+    case onDown
+    case onUp
+    case onHold(minSeconds: TimeInterval)
+    case repeatEvery(seconds: TimeInterval)
+}
+
+struct DigitalMapping: Codable, Hashable
 {
     let intent: PlayerCommandIntent
-    let raw: RawInputSpec
+    let inputs: Set<GenericInput> // any pressed among these
+    let policy: DigitalEdgePolicy
+}
+
+struct Axis1DMapping: Codable, Hashable
+{
+    let intent: PlayerCommandIntent
+    let input: GenericInput
     let deadZone: Float
-    let transform: (Float) -> Float
+    let invert: Bool
+    let curve: AxisCurve
+    let reportEpsilon: Float // throttle command spam
+    
+    init(intent: PlayerCommandIntent,
+         input: GenericInput,
+         deadZone: Float = 0.1,
+         invert: Bool = false,
+         curve: AxisCurve = .linear,
+         reportEpsilon: Float = 0.02
+    ){
+        self.intent = intent
+        self.input = input
+        self.deadZone = deadZone
+        self.invert = invert
+        self.curve = curve
+        self.reportEpsilon = reportEpsilon
+    }
+}
+
+struct Axis2DMapping: Codable, Hashable
+{
+    let intent: PlayerCommandIntent
+    let x: GenericInput
+    let y: GenericInput
+    let deadZone: Float // circular DZ on magnitude
+    let invertX: Bool
+    let invertY: Bool
+    let curve: AxisCurve
+    let reportEpsilon: CGFloat
+    
+    init(intent: PlayerCommandIntent,
+         x: GenericInput,
+         y: GenericInput,
+         deadZone: Float = 0.15,
+         invertX: Bool = false,
+         invertY: Bool = false,
+         curve: AxisCurve = .linear,
+         reportEpsilon: CGFloat = 0.02
+    ){
+        self.intent = intent
+        self.x = x
+        self.y = y
+        self.deadZone = deadZone
+        self.invertX = invertX
+        self.invertY = invertY
+        self.curve = curve
+        self.reportEpsilon = reportEpsilon
+    }
+}
+
+struct PointerMapping: Codable, Hashable
+{
+    let intent: PlayerCommandIntent
+    let phases: Set<PointerPhase>
 }
 
 /// Singleton Component: Should have only one instance per `EntityAdmin`

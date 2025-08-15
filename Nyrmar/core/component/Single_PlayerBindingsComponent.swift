@@ -14,10 +14,8 @@ final class Single_PlayerBindingsComponent: Component
     static let typeID = componentTypeID(for: Single_PlayerBindingsComponent.self)
     var siblings: SiblingContainer?
     
-    var mappings: [ActionMapping]
-
-    init(mappings: [ActionMapping])
-    {
-        self.mappings = mappings
-    }
+    var digital: [DigitalMapping] = []
+    var axis1D:  [Axis1DMapping]  = []
+    var axis2D:  [Axis2DMapping]  = []
+    var pointer: [PointerMapping] = []
 }

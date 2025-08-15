@@ -182,7 +182,7 @@ class EntityAdmin
         let moveStateComp = MoveStateComponent()
         let baseStatsComp = BaseStatsComponent()
 
-        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, /*physicsComp, forceComp,*/ moveStateComp, baseStatsComp)
+        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
         m_TestSpriteEntity = entity
     }
     
@@ -234,11 +234,12 @@ class EntityAdmin
             return bindingsComp
         }
         
-        let mappings = [
-            ActionMapping(intent:.moveToLocation, raw:.pointer, deadZone:0.0,  transform: { $0 })
-        ]
+        let bindingsComp = Single_PlayerBindingsComponent()
+        bindingsComp.pointer.append(contentsOf: [
+            PointerMapping(intent: .jump, phases: [.up]),
+            PointerMapping(intent: .moveToLocation, phases: [.down, .dragged])
+        ])
         
-        let bindingsComp = Single_PlayerBindingsComponent(mappings: mappings)
         let entity = addEntity(with: bindingsComp)!
         m_PlayerBindingsEntity = entity
         m_PlayerBindingsComponent = bindingsComp
