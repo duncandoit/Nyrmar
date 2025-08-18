@@ -8,15 +8,17 @@
 import CoreGraphics
 import Foundation
 
-/// MovementExertionSystem: intent/policy → desired kinematics. Writes to MovementState, never to transformComp.
+/// Reads MoveExertionComponent intents and writes a *desired acceleration*
+/// into MoveStateComponent.acceleration via a PD controller (seek).
 final class MovementExertionSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveExertionComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
+    func update(deltaTime dt: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let exertionComp = component as! MoveExertionComponent
-        guard let moveStateComp = exertionComp.sibling(MoveStateComponent.self) else
+
+        guard let stateComp = exertionComp.sibling(MoveStateComponent.self) else
         {
             return
         }
@@ -24,82 +26,65 @@ final class MovementExertionSystem: System
         {
             return
         }
-        guard let baseStatsComp = moveStateComp.sibling(BaseStatsComponent.self) else
+
+        // Clear per–tick output (we’ll author it below if there is intent).
+        stateComp.acceleration = .zero
+        stateComp.lastAppliedDelta = .zero
+        
+        if exertionComp.killVelocity
         {
-            return
+            stateComp.velocity = .zero
+            exertionComp.killVelocity = false
         }
 
-        var targetVelocity = CGVector.zero
-        var wantVelocity = false
-
-        // Teleport/delta handled by MovementStateSystem
-        // Do not generate velocity for them
-        // Seek -> desired velocity toward target
+        // High-level seek intent: PD acceleration
         if let target = exertionComp.seekTarget
         {
-            let targetVector = CGVector(
+            // Position error
+            let toTarget = CGVector(
                 dx: target.x - transformComp.position.x,
                 dy: target.y - transformComp.position.y
             )
-            let deltaDistance = targetVector.length
-            moveStateComp.isSeeking = true
-            moveStateComp.currentSeekTarget = target
-            moveStateComp.remainingDistance = deltaDistance
             
-            let speed = exertionComp.seekSpeed ?? baseStatsComp.moveSpeed
-            let cappedSpeed = min(speed, deltaDistance / deltaTime)
-            targetVelocity = deltaDistance > 0 ? targetVector.normalized() * cappedSpeed : .zero
-            wantVelocity = true
-        }
+            let distance = toTarget.length
+            stateComp.isSeeking = true
+            stateComp.currentSeekTarget = target
+            stateComp.remainingDistance = distance
 
-        // Direct desired continuous velocity
-        if let velocityDesired = exertionComp.velocityDesired
-        {
-            targetVelocity = velocityDesired
-            wantVelocity = true
-        }
+            // PD: a = Kp * e - Kd * v
+            let Kp = exertionComp.seekKp
+            let Kd = exertionComp.seekKd
+            var a   = toTarget * Kp - stateComp.velocity * Kd
 
-        // Accelerate current velocity toward destination
-        if wantVelocity
-        {
-            let currentVelocity = moveStateComp.velocity
-            var maxVelocity = exertionComp.maxAcceleration ?? .greatestFiniteMagnitude
-            if deltaTime == 0
+            // Ground interaction / air control
+            if stateComp.isGrounded
             {
-                // snap if no time
-                maxVelocity = .greatestFiniteMagnitude
-            }
-            let deltaVelocity = targetVelocity - currentVelocity
-            let velocityStep = deltaVelocity.clampedMagnitude(maxVelocity * deltaTime)
-            var nextVelocity = currentVelocity + velocityStep
-            if let maxSpeed = baseStatsComp.moveSpeedMax
-            {
-                nextVelocity = nextVelocity.clampedMagnitude(maxSpeed)
-            }
-            
-            moveStateComp.acceleration = deltaTime > 0 ? (nextVelocity - currentVelocity) * (1.0 / deltaTime) : .zero
-            moveStateComp.velocity = nextVelocity
-            moveStateComp.isSettled = nextVelocity.length < 0.001 && exertionComp.seekTarget == nil && exertionComp.velocityDesired == nil
-        }
-        else
-        {
-            // No velocity intent -> decay toward rest under acceleration cap
-            let currentVelocity = moveStateComp.velocity
-            if currentVelocity.length > 0, let maxVelocity = exertionComp.maxAcceleration, deltaTime > 0
-            {
-                let deceleration = (currentVelocity * -1).clampedMagnitude(maxVelocity * deltaTime)
-                let nextVelocity = currentVelocity + deceleration
-                moveStateComp.acceleration = (nextVelocity - currentVelocity) * (1.0 / deltaTime)
-                moveStateComp.velocity = nextVelocity
-                moveStateComp.isSettled = nextVelocity.length < 0.001
+                // Remove acceleration component into the ground (keep tangential)
+                let n = stateComp.groundNormal.normalized()
+                let dot = a.dx * n.dx + a.dy * n.dy
+                a = CGVector(dx: a.dx - dot * n.dx, dy: a.dy - dot * n.dy)
             }
             else
             {
-                moveStateComp.acceleration = .zero
-                
-                // keep current velocity (external systems may manage it)
-                moveStateComp.isSettled = moveStateComp.velocity.length < 0.001
+                // Throttle control while airborne
+                a = a * max(0, min(1, stateComp.airControl))
             }
+
+            // Clamp seek acceleration
+            a = a.clampedMagnitude(exertionComp.maxSeekAcceleration)
+            stateComp.acceleration = a
+
+            // Arrival snap hysteresis
+            //if distance <= max(exertionComp.arriveEpsilon, 1.0 /  CGFloat(admin.camera2DComponent().pixelsPerUnit))
+            //{
+            //    // Let MovementStateSystem handle the final snap & clearing.
+            //}
+        }
+        else
+        {
+            stateComp.isSeeking = false
+            stateComp.currentSeekTarget = nil
+            stateComp.remainingDistance = 0
         }
     }
 }

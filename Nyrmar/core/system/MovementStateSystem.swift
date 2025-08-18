@@ -7,23 +7,20 @@
 
 import Foundation
 
-/// Applies one-shots, integrates velocity with dt, enforces clamps, updates Transform
+/// Applies one-shots (teleport/delta), integrates position using current velocity,
+/// performs seek arrival snap, constraints, and settles small motion.
 final class MovementStateSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
-        let moveStateComp = component as! MoveStateComponent
-        guard let exertionComp = moveStateComp.sibling(MoveExertionComponent.self) else
+        let stateComp = component as! MoveStateComponent
+        guard let exertionComp = stateComp.sibling(MoveExertionComponent.self) else
         {
             return
         }
-        guard let transformComp = moveStateComp.sibling(TransformComponent.self) else
-        {
-            return
-        }
-        guard let baseStatsComp = moveStateComp.sibling(BaseStatsComponent.self) else
+        guard let transformComp = stateComp.sibling(TransformComponent.self) else
         {
             return
         }
@@ -32,92 +29,85 @@ final class MovementStateSystem: System
         transformComp.prevRotation = transformComp.rotation
         transformComp.prevScale    = transformComp.scale
 
-        var position = transformComp.position
-        moveStateComp.lastAppliedDelta = .zero
+        var targetPosition = transformComp.position
+        stateComp.lastAppliedDelta = .zero
 
-        // Teleport
-        if let targetPosition = exertionComp.teleportTo
+        // One-shot: teleport
+        if let position = exertionComp.teleportTo
         {
-            position = targetPosition
-            moveStateComp.velocity = .zero
-            moveStateComp.acceleration = .zero
-            moveStateComp.isSeeking = false
-            moveStateComp.currentSeekTarget = nil
-            moveStateComp.remainingDistance = 0
+            targetPosition = position
+            stateComp.velocity     = .zero
+            stateComp.acceleration = .zero
+            stateComp.isSeeking    = false
+            stateComp.currentSeekTarget = nil
+            stateComp.remainingDistance = 0
             exertionComp.teleportTo = nil
         }
 
-        // One-shot delta
-        if let deltaWorld = exertionComp.deltaWorld
+        // One-shot: absolute world delta
+        if let deltaPosition = exertionComp.deltaWorld
         {
-            position.x += deltaWorld.dx
-            position.y += deltaWorld.dy
-            moveStateComp.lastAppliedDelta = deltaWorld
+            targetPosition.x += deltaPosition.dx
+            targetPosition.y += deltaPosition.dy
+            stateComp.lastAppliedDelta += deltaPosition
             exertionComp.deltaWorld = nil
         }
 
-        // Velocity integration
-        let prevPosition = position
-        if moveStateComp.velocity.length > 0 && deltaTime > 0
+        // Velocity integration (semi-implicit Euler was done in PhysicsSystem for v
+        // here we integrate x using the current velocity)
+        if deltaTime > 0, stateComp.velocity.lengthSquared > 0
         {
-            let deltaVelocity = moveStateComp.velocity * deltaTime
-            position.x += deltaVelocity.dx
-            position.y += deltaVelocity.dy
-            moveStateComp.lastAppliedDelta = moveStateComp.lastAppliedDelta + deltaVelocity
+            let deltaVelocity = stateComp.velocity * deltaTime
+            targetPosition.x += deltaVelocity.dx
+            targetPosition.y += deltaVelocity.dy
+            stateComp.lastAppliedDelta += deltaVelocity
         }
 
-        // Seek arrival check (snap & clear when close)
-        if let targetPosition = exertionComp.seekTarget
+        // Seek arrival snap (and crossing protection)
+        if let target = exertionComp.seekTarget
         {
-            // crossed target?
-            let vPrev = CGVector(dx: targetPosition.x - prevPosition.x, dy: targetPosition.y - prevPosition.y)
-            let vNow  = CGVector(dx: targetPosition.x - position.x, dy: targetPosition.y - position.y)
-            let crossed = (vPrev.dx * vNow.dx + vPrev.dy * vNow.dy) <= 0
+            let prevTo = CGVector(
+                dx: target.x - transformComp.position.x,
+                dy: target.y - transformComp.position.y
+            )
+            
+            let nowTo   = CGVector(dx: target.x - targetPosition.x, dy: target.y - targetPosition.y)
+            let crossed = (prevTo.dx * nowTo.dx + prevTo.dy * nowTo.dy) <= 0
 
-            let dx = targetPosition.x - position.x, dy = targetPosition.y - position.y
+            let dx = target.x - targetPosition.x
+            let dy = target.y - targetPosition.y
             let distance = sqrt(dx*dx + dy*dy)
-            moveStateComp.remainingDistance = distance
+            stateComp.remainingDistance = distance
 
-            if crossed || distance <= exertionComp.arriveEpsilon
+            let arriveEpsilon = max(
+                exertionComp.arriveEpsilon,
+                1.0 / CGFloat(admin.camera2DComponent().pixelsPerUnit)
+            )
+
+            if crossed || distance <= arriveEpsilon
             {
-                position = targetPosition
+                targetPosition = target
                 exertionComp.seekTarget = nil
-                moveStateComp.isSeeking = false
-                moveStateComp.currentSeekTarget = nil
-                moveStateComp.velocity = .zero
-                moveStateComp.acceleration = .zero
+                stateComp.isSeeking = false
+                stateComp.currentSeekTarget = nil
+                stateComp.velocity = .zero      // stop precisely at target
+                stateComp.acceleration = .zero
             }
             else
             {
-                moveStateComp.isSeeking = true
-                moveStateComp.currentSeekTarget = targetPosition
+                stateComp.isSeeking = true
+                stateComp.currentSeekTarget = target
             }
         }
         else
         {
-            moveStateComp.isSeeking = false
-            moveStateComp.currentSeekTarget = nil
-            moveStateComp.remainingDistance = 0
+            stateComp.isSeeking = false
+            stateComp.currentSeekTarget = nil
+            stateComp.remainingDistance = 0
         }
 
-        // Constraints
-        if let maxVelocity = baseStatsComp.moveSpeedMax, maxVelocity > 0
-        {
-            moveStateComp.velocity = moveStateComp.velocity.clampedMagnitude(maxVelocity)
-        }
-        if let clampRect = exertionComp.clampRect
-        {
-            position.x = min(max(position.x, clampRect.minX), clampRect.maxX)
-            position.y = min(max(position.y, clampRect.minY), clampRect.maxY)
-        }
-        if let grid = exertionComp.snapToGrid, grid > 0
-        {
-            position.x = (position.x / grid).rounded() * grid
-            position.y = (position.y / grid).rounded() * grid
-        }
-
-        // Commit
-        transformComp.position = position
-        moveStateComp.isSettled = moveStateComp.isSettled && moveStateComp.velocity.length < 0.001 && exertionComp.seekTarget == nil
+        // Commit & settle
+        transformComp.position = targetPosition
+        stateComp.isSettled = stateComp.velocity.length < stateComp.settledEpsilon && exertionComp.seekTarget == nil
     }
 }

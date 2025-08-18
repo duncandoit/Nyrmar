@@ -10,116 +10,191 @@ import Foundation
 
 final class PhysicsSystem: System
 {
-    let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
+    let requiredComponent: ComponentTypeID = PhysicsStateComponent.typeID
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
-        let moveStateComp = component as! MoveStateComponent
-        guard let physicsComp = moveStateComp.sibling(PhysicsMaterialComponent.self) else
-        {
-            return
-        }
+        let physicsComp = component as! PhysicsStateComponent
         guard !physicsComp.ignorePhysics else
         {
             return
         }
-        guard let baseStatsComp = moveStateComp.sibling(BaseStatsComponent.self) else
+        guard let physicsTermComp = physicsComp.sibling(PhysicsTermComponent.self) else
+        {
+            return
+        }
+        guard let moveStateComp = physicsComp.sibling(MoveStateComponent.self) else
+        {
+            return
+        }
+        guard deltaTime > 0 else
         {
             return
         }
         
-        let inverseMass: CGFloat = 1.0 / physicsComp.mass
+        var keptTerms: [PhysicsTermComponent.Term] = []
 
-        // Kinematic / immovable entities: consume impulses, no physics adjustments.
+        // Kinematic / immovable: consume impulses; decay terms magnitudes; no kinematics
         if physicsComp.mass <= 0
         {
-            if let forceAccumulator = moveStateComp.sibling(ForceAccumulatorComponent.self)
+            // decay continuous terms (no motion)
+            keptTerms.reserveCapacity(physicsTermComp.terms.count)
+            
+            for var term in physicsTermComp.terms where term.enabled
             {
-                forceAccumulator.impulses.removeAll(keepingCapacity: true)
-                if forceAccumulator.forceDecayPerSecond > 0
+                switch term.decay
                 {
-                    let dampingMultiplier = exp(-physicsComp.linearDamping * deltaTime)
-                    forceAccumulator.force = forceAccumulator.force * dampingMultiplier
+                case .infinite:
+                    
+                    ()
+                    
+                case .linear(_):
+                    
+                    term.remaining -= deltaTime
+                    if term.remaining <= 0
+                    {
+                        continue
+                    }
+                    
+                case .exponential(_):
+                    
+                    term.remaining -= deltaTime
+                    if term.remaining <= 0
+                    {
+                        continue
+                    }
                 }
+                
+                keptTerms.append(term)
             }
+            
+            physicsTermComp.terms = keptTerms
+            physicsTermComp.impulses.removeAll(keepingCapacity: true)
+            
             moveStateComp.acceleration = .zero
             return
         }
+        
+        let invertedMass: CGFloat = 1.0 / physicsComp.mass
 
-        // Accumulate accelerations from Exertion
-        var accumulatedAcceleration = moveStateComp.acceleration
+        // Start with intent acceleration produced by MovementExertionSystem
+        var acceleration = moveStateComp.acceleration
 
-        // Gravity (example world units: points/s^2)
-        if physicsComp.gravityScale != 0
-        {
-            //let gravityAcceleration = CGVector(dx: 0, dy: -980) * physicsComp.gravityScale
-            let gravityAcceleration = CGVector(dx: 0, dy: 980) * physicsComp.gravityScale
-            accumulatedAcceleration = accumulatedAcceleration + gravityAcceleration
-        }
+        // Sum continuous external terms (fields), applying decay and space transforms
+        keptTerms = []
+        keptTerms.reserveCapacity(physicsTermComp.terms.count)
 
-        // External forces & impulses
-        if let forceAccumulator: ForceAccumulatorComponent = moveStateComp.sibling(ForceAccumulatorComponent.self)
-        {
-            if forceAccumulator.force.lengthSquared > 0
+        // rotation for local-space vectors
+        let rotation: (CGVector) -> CGVector = {
+            if let transformComp: TransformComponent = moveStateComp.sibling(TransformComponent.self)
             {
-                accumulatedAcceleration = accumulatedAcceleration + (forceAccumulator.force * inverseMass)
+                let cosine = cos(transformComp.rotation)
+                let sine = sin(transformComp.rotation)
+                
+                return { vector in
+                    CGVector(dx: cosine*vector.dx - sine*vector.dy, dy: sine*vector.dx + cosine*vector.dy)
+                }
+            }
+            else
+            {
+                return { $0 }
+            }
+        }()
 
-                if forceAccumulator.forceDecayPerSecond > 0, deltaTime > 0
+        for var term in physicsTermComp.terms where term.enabled
+        {
+            // decay bookkeeping
+            var scale: CGFloat = 1
+            switch term.decay
+            {
+            case .infinite:
+                
+                ()
+                
+            case .linear(let dur):
+                
+                term.remaining -= deltaTime
+                if term.remaining <= 0
                 {
-                    let decayMultiplier = exp(-forceAccumulator.forceDecayPerSecond * deltaTime)
-                    forceAccumulator.force = forceAccumulator.force * decayMultiplier
+                    continue
+                }
+                
+                let t = max(0, min(1, CGFloat(1 - term.remaining / max(dur, 1e-6))))
+                scale = 1 - t
+                
+            case .exponential(let half):
+                
+                term.remaining -= deltaTime
+                if term.remaining <= 0
+                {
+                    continue
+                }
+                
+                scale = pow(0.5, CGFloat(deltaTime) / CGFloat(max(half, 1e-6)))
+            }
+
+            // quantity → acceleration contribution
+            let vector: CGVector = {
+                switch term.quantity
+                {
+                case .acceleration(let acc):
                     
-                    if forceAccumulator.force.length < 0.0001
-                    {
-                        forceAccumulator.force = .zero
-                    }
+                    return acc
+                    
+                case .force(let F):
+                    
+                    return F * invertedMass
                 }
-            }
+            }()
 
-            if !forceAccumulator.impulses.isEmpty
+            let worldVec = (term.space == .local) ? rotation(vector) : vector
+            acceleration += worldVec * scale
+            keptTerms.append(term)
+        }
+        
+        physicsTermComp.terms = keptTerms
+
+        // One-shot impulses: Δv = Σ(J) / m
+        if !physicsTermComp.impulses.isEmpty
+        {
+            var dv = CGVector.zero
+            for J in physicsTermComp.impulses
             {
-                var deltaVelocityFromImpulses = CGVector.zero
-                for impulse in forceAccumulator.impulses
-                {
-                    deltaVelocityFromImpulses = deltaVelocityFromImpulses + (impulse * inverseMass)
-                }
-                moveStateComp.velocity = moveStateComp.velocity + deltaVelocityFromImpulses
-                forceAccumulator.impulses.removeAll(keepingCapacity: true)
+                dv += J * invertedMass
             }
+            
+            moveStateComp.velocity += dv
+            physicsTermComp.impulses.removeAll(keepingCapacity: true)
         }
 
-        // Linear drag: a_drag = -(c/m) * v
+        // Linear drag: a_drag = -(c/m) * v   (proportional to velocity)
         if physicsComp.linearDrag > 0
         {
-            let dragAcceleration = moveStateComp.velocity * (physicsComp.linearDrag * inverseMass)
-            accumulatedAcceleration = accumulatedAcceleration - dragAcceleration
+            acceleration -= moveStateComp.velocity * (physicsComp.linearDrag * invertedMass)
         }
 
-        // Integrate velocity (semi-implicit Euler for v)
-        if deltaTime > 0
+        // Integrate velocity (semi-implicit Euler)
+        moveStateComp.velocity += acceleration * deltaTime
+
+        // Exponential damping (frame-rate independent)
+        if physicsComp.linearDamping > 0
         {
-            moveStateComp.velocity = moveStateComp.velocity + (accumulatedAcceleration * deltaTime)
+            let k: Double = exp(-physicsComp.linearDamping * deltaTime)
+            moveStateComp.velocity *= k
         }
 
-        // Exponential damping (framerate independent)
-        if physicsComp.linearDamping > 0, deltaTime > 0
-        {
-            let dampingMultiplier = exp(-physicsComp.linearDamping * deltaTime)
-            moveStateComp.velocity = moveStateComp.velocity * dampingMultiplier
-        }
-
-        // Speed caps: material then mover policy
+        // Speed caps: material then base stats
         if let maxVelocity = physicsComp.maxSpeed
         {
             moveStateComp.velocity = moveStateComp.velocity.clampedMagnitude(maxVelocity)
         }
-        if let maxVelocityFromThrall = baseStatsComp.moveSpeedMax
+        
+        if let maxVelocity = moveStateComp.sibling(BaseStatsComponent.self)?.moveSpeedMax
         {
-            moveStateComp.velocity = moveStateComp.velocity.clampedMagnitude(maxVelocityFromThrall)
+            moveStateComp.velocity = moveStateComp.velocity.clampedMagnitude(maxVelocity)
         }
 
-        // Acceleration is a per-tick result
+        // Clear per-tick acceleration (it was a result of arbitration this tick)
         moveStateComp.acceleration = .zero
-        // MovementStateSystem will apply: position += velocity * dt.
     }
 }

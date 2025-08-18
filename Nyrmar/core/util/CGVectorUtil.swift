@@ -41,10 +41,29 @@ public extension CGVector
     {
         CGVector(dx: dx - other.dx, dy: dy - other.dy)
     }
+    
+    // Project v onto n (unit not required)
+    @inline(__always)
+    private func project(_ v: CGVector, onto n: CGVector) -> CGVector
+    {
+        let nn = n.dx*n.dx + n.dy*n.dy
+        guard nn > 0 else { return .zero }
+        let scale = (v.dx*n.dx + v.dy*n.dy) / nn
+        return CGVector(dx: n.dx*scale, dy: n.dy*scale)
+    }
 }
 
-// Operators (must be at file scope in Swift)
 @inlinable public func * (v: CGVector, s: CGFloat) -> CGVector { v.scaled(by: s) }
+@inlinable public func * (v: CGVector, s: Double) -> CGVector { v.scaled(by: s) }
 @inlinable public func * (s: CGFloat, v: CGVector) -> CGVector { v.scaled(by: s) }
 @inlinable public func + (a: CGVector, b: CGVector) -> CGVector { a.adding(b) }
 @inlinable public func - (a: CGVector, b: CGVector) -> CGVector { a.subtracting(b) }
+@inlinable public func +=(lhs: inout CGVector, rhs: CGVector) { lhs = lhs + rhs }
+@inlinable public func -=(lhs: inout CGVector, rhs: CGVector) { lhs = lhs - rhs }
+
+@inlinable public func *=(lhs: inout CGVector, rhs: Double)
+{
+    let g = CGFloat(rhs)
+    lhs.dx *= g
+    lhs.dy *= g
+}

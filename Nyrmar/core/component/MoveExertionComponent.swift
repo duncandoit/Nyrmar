@@ -13,28 +13,34 @@ enum MovementLayer: UInt8
     case player, ai, script, physics
 }
 
-/// Declarative intents + policy constraints
-/// `MovementExertionSystem` reads intent fields (seekTarget, velocityDesired, etc.) and policy (maxAcceleration, priorities).
-/// It arbitrates multiple writers (player, AI, etc), resolves conflicts, and outputs desired kinematics.
+/// Declarative movement intents for one tick.
+/// Used by MovementExertionSystem → PhysicsTermComponent
+/// Finalized by MotionFinalizationSystem.
 final class MoveExertionComponent: Component
 {
-    static let typeID: ComponentTypeID = componentTypeID(for: MoveExertionComponent.self)
+    static let typeID = componentTypeID(for: MoveExertionComponent.self)
     var siblings: SiblingContainer?
 
-    // One-frame intents (systems clear after applying)
-    var teleportTo: CGPoint?              // hard snap; overrides everything for the frame
-    var deltaWorld: CGVector?             // absolute world delta to add this frame
-    var velocityDesired: CGVector?        // instantaneous desired velocity (pts/s)
-    var seekTarget: CGPoint?              // world target; keep until reached
-    var seekSpeed: CGFloat?               // pts/s (fallback to moveSpeed if nil)
-    var faceTarget: CGPoint?              // world point to face (if you rotate elsewhere)
-    var faceAngularSpeed: CGFloat?        // rad/s (nil => snap)
+// MARK: High-level goal: seek to a world-space target
+    
+    var seekTarget: CGPoint? = nil
+    var killVelocity: Bool = false
 
-    // Persistent constraints / policy
-    var maxAcceleration: CGFloat? = nil
-    var clampRect: CGRect? = nil          // keep position within bounds
-    var snapToGrid: CGFloat? = nil        // e.g., 1.0 for pixel-perfect
-    var arriveEpsilon: CGFloat = 0.5      // "close enough" for seek
-    var layer: MovementLayer = .player
-    var priority: Int16 = 0               // higher wins if intents conflict
+// MARK: PD gains for seek (acceleration output)
+    
+    var seekKp: CGFloat = 12.0
+    var seekKd: CGFloat = 4.0
+
+// MARK: Clamp for the seek-produced acceleration (world units / s^2)
+    
+    var maxSeekAcceleration: CGFloat = 4000.0
+
+// MARK: Arrival snap threshold (world units). Consider ≥ 1/PPU.
+    
+    var arriveEpsilon: CGFloat = 0.01
+
+// MARK: One-shot transforms (consumed when applied)
+    
+    var teleportTo: CGPoint? = nil
+    var deltaWorld: CGVector? = nil
 }

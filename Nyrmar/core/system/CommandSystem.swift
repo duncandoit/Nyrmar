@@ -37,20 +37,21 @@ final class CommandSystem: System
             {
                 
             case (.jump, .screenPosition(_)):
-                let physicsComp = thrallComp.sibling(PhysicsMaterialComponent.self)!
+                
+                let physicsComp = thrallComp.sibling(PhysicsStateComponent.self)!
                 physicsComp.ignorePhysics = false
                 
-                var forceComp: ForceAccumulatorComponent! = thrallComp.sibling(ForceAccumulatorComponent.self)
-                if forceComp == nil
-                {
-                    forceComp = ForceAccumulatorComponent()
-                    admin.addSibling(forceComp!, to: thrallComp)
-                }
-                forceComp.impulses.append(CGVector(dx: 0, dy: -200))
+                //var forceComp: PhysicsTermComponent! = thrallComp.sibling(PhysicsTermComponent.self)
+                //if forceComp == nil
+                //{
+                //    forceComp = PhysicsTermComponent()
+                //    admin.addSibling(forceComp!, to: thrallComp)
+                //}
+                //forceComp.impulses.append(CGVector(dx: 0, dy: -200))
                 
             case (.moveToLocation, .screenPosition(let screenSpacePoint)):
                 
-                let physicsComp = thrallComp.sibling(PhysicsMaterialComponent.self)!
+                let physicsComp = thrallComp.sibling(PhysicsStateComponent.self)!
                 physicsComp.ignorePhysics = true
                 
                 // No viewport yet. Ignore this tick.
@@ -92,12 +93,13 @@ final class CommandSystem: System
                 
                 // Hysteresis: at least one world pixel
                 let ppu = CGFloat(cameraComp.pixelsPerUnit)
-                exertionComp.arriveEpsilon = max(exertionComp.arriveEpsilon, 1.0 / ppu)
+                exertionComp.seekKd          = 0.0   // No velocity dampening
+                exertionComp.seekKp          = 60.0  // Proportional push
+                exertionComp.arriveEpsilon   = max(exertionComp.arriveEpsilon, 1.0 / ppu)
                 exertionComp.teleportTo      = nil
                 exertionComp.deltaWorld      = nil
-                exertionComp.velocityDesired = nil
                 exertionComp.seekTarget      = worldSpacePoint
-                exertionComp.seekSpeed       = nil
+                exertionComp.killVelocity    = true
 
             //case (.move, .axis2D(let vector)):
             //

@@ -52,8 +52,8 @@
 				core/system/SpriteSpawnSystem.swift,
 				core/system/TilemapSpawnSystem.swift,
 				core/system/ViewportSystem.swift,
-				core/UInt64Util.swift,
 				core/util/AssetManagerUtil.swift,
+				core/util/UInt64Util.swift,
 			);
 			target = C3DAF2492E3BDB1B00C46474 /* NyrmarTests */;
 		};

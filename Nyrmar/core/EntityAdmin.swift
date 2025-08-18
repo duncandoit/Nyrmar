@@ -185,13 +185,32 @@ class EntityAdmin
         
         let collisionComp = CollisionComponent(shape: .aabb(worldSize))
         let thrallComp = ThrallComponent(controllerID: inputComponent().controllerID)
-        let physicsComp = PhysicsMaterialComponent()
-        physicsComp.maxSpeed = 20
-        physicsComp.linearDrag = 10
+        let physicsComp = PhysicsStateComponent()
+        physicsComp.mass = 1.0
+        physicsComp.gravityScale = 0.0
+        physicsComp.maxSpeed = nil
+        physicsComp.linearDrag = 0.0
+        physicsComp.linearDamping = 0.0
+        physicsComp.airDrag = 0.0
+        physicsComp.groundFriction = 0.0
         
-        let forceComp = ForceAccumulatorComponent()
+        let forceComp = PhysicsTermComponent()
+        //forceComp.terms = [
+        //    // Low Gravity
+        //    .init(
+        //        quantity: .acceleration(CGVector(dx: 0, dy: 200)),
+        //        space: .world,
+        //        decay: .infinite,
+        //        remaining: .infinity,
+        //        enabled: true
+        //    )
+        //]
+        
         let moveStateComp = MoveStateComponent()
+        moveStateComp.airControl = 1.0
+        
         let baseStatsComp = BaseStatsComponent()
+        baseStatsComp.moveSpeedMax = 100
 
         let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
         m_TestSpriteEntity = entity

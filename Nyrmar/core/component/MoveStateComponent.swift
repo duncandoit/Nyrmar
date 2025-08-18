@@ -14,15 +14,20 @@ final class MoveStateComponent: Component
     static let typeID: ComponentTypeID = componentTypeID(for: MoveStateComponent.self)
     var siblings: SiblingContainer?
 
-    // instantaneous state
+// MARK: instantaneous state
+    
     var velocity: CGVector = .zero        // pts/s
     var acceleration: CGVector = .zero    // pts/s^2
 
-    // diagnostics / book-keeping
+// MARK: diagnostics / book-keeping
+    
     var lastAppliedDelta: CGVector = .zero
     var isSeeking: Bool = false
     var currentSeekTarget: CGPoint? = nil
     var remainingDistance: CGFloat = 0
     var isSettled: Bool = true
     let settledEpsilon = 0.5
+    var isGrounded: Bool = false
+    var groundNormal: CGVector = .init(dx: 0, dy: 1)
+    var airControl: CGFloat = 0.5        // 0 = no control in air, 1 = full control
 }
