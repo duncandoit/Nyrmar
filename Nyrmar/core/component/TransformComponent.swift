@@ -12,10 +12,13 @@ class TransformComponent: Component
     static let typeID: ComponentTypeID = componentTypeID(for: TransformComponent.self)
     var siblings: SiblingContainer?
     
-    var position: CGPoint = .zero
     var zPosition: CGFloat = .zero
     
-    /// Rotation in radians
-    var zRotation: CGFloat = 0
+    var position: CGPoint = .zero
+    var rotation: CGFloat = 0 // Radians
     var scale: CGSize = CGSize(width: 1.0, height: 1.0)
+    
+    var prevPosition: CGPoint = .zero
+    var prevRotation: CGFloat = 0 // Radians
+    var prevScale: CGSize = .init(width: 1.0, height: 1.0)
 }

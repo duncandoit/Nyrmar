@@ -12,6 +12,9 @@ final class PhysicsMaterialComponent: Component
 {
     static let typeID = componentTypeID(for: PhysicsMaterialComponent.self)
     var siblings: SiblingContainer?
+    
+    /// If true the `PhysicsSystem` is skipped for this entity.
+    var ignorePhysics = false
 
     /// <= 0 is immovable/kinematic
     var mass: CGFloat = 1.0

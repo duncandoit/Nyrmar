@@ -11,7 +11,7 @@ final class ViewportSystem: System
 {
     let requiredComponent: ComponentTypeID = Single_MetalSurfaceComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let surfaceComp = component as! Single_MetalSurfaceComponent
         
@@ -57,7 +57,7 @@ final class ViewportSystem: System
         }
         
         // Sync the device with the lazy created texture cache
-        guard let cacheComp = EntityAdmin.shared.metalTextureCacheComponent() else
+        guard let cacheComp = admin.metalTextureCacheComponent() else
         {
             return
         }

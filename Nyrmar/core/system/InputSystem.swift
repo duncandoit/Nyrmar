@@ -16,19 +16,18 @@ final class InputSystem: System
 {
     let requiredComponent: ComponentTypeID = Single_InputComponent.typeID
 
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let inputComp = component as! Single_InputComponent
-        let bindingsComp = EntityAdmin.shared.playerBindingsComponent()
-        let clockComp = EntityAdmin.shared.simClockComponent()
-        let timestamp = clockComp.quantizedNow
+        let bindingsComp = admin.playerBindingsComponent()
+        let clockComp = admin.clockComponent()
 
         var commands = inputComp.commandQueue
 
-        processDigitalEdges(input: inputComp, bindings: bindingsComp, timestamp: timestamp, out: &commands)
-        processPointerEvents(input: inputComp, bindings: bindingsComp, timestamp: timestamp, out: &commands)
-        processAxis1D(input: inputComp, bindings: bindingsComp, timestamp: timestamp, out: &commands)
-        processAxis2D(input: inputComp, bindings: bindingsComp, timestamp: timestamp, out: &commands)
+        processDigitalEdges(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processPointerEvents(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processAxis1D(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processAxis2D(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
 
         inputComp.commandQueue = commands
 
@@ -39,10 +38,11 @@ final class InputSystem: System
 
     // MARK: - Digital
 
+    @inline(__always)
     private func processDigitalEdges(
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
-        timestamp: TimeInterval,
+        tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
         guard !bindings.digital.isEmpty, !input.digitalEdges.isEmpty else
@@ -58,18 +58,18 @@ final class InputSystem: System
                 {
                 case .onDown where edge.isDown:
                     
-                    stamp(intent: mapping.intent, value: .isPressed(true), controllerID: input.controllerID, timestamp: timestamp, out: &out)
+                    stamp(intent: mapping.intent, value: .isPressed(true), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
                     
                 case .onUp where !edge.isDown:
                     
-                    stamp(intent: mapping.intent, value: .isPressed(false), controllerID: input.controllerID, timestamp: timestamp, out: &out)
+                    stamp(intent: mapping.intent, value: .isPressed(false), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
                     
                 case .onHold:
                     
                     // Stateless mapping layer: emit press on down; duration enforcement belongs in a separate system.
                     if edge.isDown
                     {
-                        stamp(intent: mapping.intent, value: .isPressed(true), controllerID: input.controllerID, timestamp: timestamp, out: &out)
+                        stamp(intent: mapping.intent, value: .isPressed(true), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
                     }
                     
                 case .repeatEvery:
@@ -84,10 +84,11 @@ final class InputSystem: System
 
     // MARK: - Pointer
 
+    @inline(__always)
     private func processPointerEvents(
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
-        timestamp: TimeInterval,
+        tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
         guard !bindings.pointer.isEmpty, !input.pointerEvents.isEmpty else
@@ -103,7 +104,7 @@ final class InputSystem: System
                     intent: mapping.intent,
                     value: .screenPosition(event.screenLocation),
                     controllerID: input.controllerID,
-                    timestamp: timestamp,
+                    tickIndex: tickIndex,
                     out: &out
                 )
             }
@@ -112,10 +113,11 @@ final class InputSystem: System
 
     // MARK: - Axis 1D
 
+    @inline(__always)
     private func processAxis1D(
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
-        timestamp: TimeInterval,
+        tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
         guard !bindings.axis1D.isEmpty else
@@ -142,17 +144,18 @@ final class InputSystem: System
             if shouldReport1D(previous: previous, newValue: curved, epsilon: mapping.reportEpsilon)
             {
                 input.lastReported1D[mapping.input] = curved
-                stamp(intent: mapping.intent, value: .axis1D(curved), controllerID: input.controllerID, timestamp: timestamp, out: &out)
+                stamp(intent: mapping.intent, value: .axis1D(curved), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
             }
         }
     }
 
     // MARK: - Axis 2D
 
+    @inline(__always)
     private func processAxis2D(
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
-        timestamp: TimeInterval,
+        tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
         guard !bindings.axis2D.isEmpty else
@@ -193,23 +196,25 @@ final class InputSystem: System
             if shouldReport2D(previous: previous, newValue: outputPoint, epsilon: mapping.reportEpsilon)
             {
                 input.lastReported2D[key] = outputPoint
-                stamp(intent: mapping.intent, value: .axis2D(outputPoint), controllerID: input.controllerID, timestamp: timestamp, out: &out)
+                stamp(intent: mapping.intent, value: .axis2D(outputPoint), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
             }
         }
     }
 
     // MARK: - Helpers
 
+    @inline(__always)
     private func stamp(
         intent: PlayerCommandIntent,
         value: CommandValue,
         controllerID: ControllerID,
-        timestamp: TimeInterval,
+        tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
-        out.append(PlayerCommand(controllerID: controllerID, intent: intent, value: value, timestamp: timestamp))
+        out.append(PlayerCommand(controllerID: controllerID, intent: intent, value: value, tickIndex: tickIndex))
     }
 
+    @inline(__always)
     private func applyDeadZone(_ value: Float, deadZone: Float) -> Float
     {
         guard deadZone > 0 else
@@ -227,6 +232,7 @@ final class InputSystem: System
         return copysign(normalized, value)
     }
 
+    @inline(__always)
     private func applyCurve(_ value: Float, curve: AxisCurve) -> Float
     {
         switch curve
@@ -246,6 +252,7 @@ final class InputSystem: System
         }
     }
 
+    @inline(__always)
     private func inputKey(_ input: GenericInput) -> String
     {
         switch input
@@ -260,11 +267,13 @@ final class InputSystem: System
         }
     }
 
+    @inline(__always)
     private func pairKey(_ x: GenericInput, _ y: GenericInput) -> String
     {
         return "\(inputKey(x))|\(inputKey(y))"
     }
 
+    @inline(__always)
     private func shouldReport1D(previous: Float?, newValue: Float, epsilon: Float) -> Bool
     {
         guard let prev = previous else
@@ -274,6 +283,7 @@ final class InputSystem: System
         return abs(prev - newValue) >= epsilon
     }
 
+    @inline(__always)
     private func shouldReport2D(previous: CGPoint?, newValue: CGPoint, epsilon: CGFloat) -> Bool
     {
         guard let prev = previous else

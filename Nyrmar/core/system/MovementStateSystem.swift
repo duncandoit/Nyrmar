@@ -12,7 +12,7 @@ final class MovementStateSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
 
-    func update(deltaTime dt: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let moveStateComp = component as! MoveStateComponent
         guard let exertionComp = moveStateComp.sibling(MoveExertionComponent.self) else
@@ -27,8 +27,11 @@ final class MovementStateSystem: System
         {
             return
         }
+        
+        transformComp.prevPosition = transformComp.position
+        transformComp.prevRotation = transformComp.rotation
+        transformComp.prevScale    = transformComp.scale
 
-        let deltaTime = CGFloat(max(dt, 0))
         var position = transformComp.position
         moveStateComp.lastAppliedDelta = .zero
 

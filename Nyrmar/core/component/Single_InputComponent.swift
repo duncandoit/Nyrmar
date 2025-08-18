@@ -78,7 +78,7 @@ struct PlayerCommand: Codable
     let controllerID: UUID
     let intent: PlayerCommandIntent
     let value: CommandValue
-    let timestamp: TimeInterval
+    let tickIndex: UInt64
 }
 
 enum AxisCurve: Hashable, Codable

@@ -26,9 +26,11 @@ final class RenderSystem: System
 {
     let requiredComponent: ComponentTypeID = Single_MetalSurfaceComponent.typeID
     
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let surfaceComp = component as! Single_MetalSurfaceComponent
+        let clockComp = admin.clockComponent()
+        
         guard let layer = surfaceComp.layer,
               let device = surfaceComp.device,
               let queue  = surfaceComp.queue,
@@ -70,7 +72,8 @@ final class RenderSystem: System
         let viewportPixelSize = simd_float2(Float(layer.drawableSize.width), Float(layer.drawableSize.height))
         
         // camera
-        let cameraComp = EntityAdmin.shared.camera2DComponent()
+        let cameraComp = admin.camera2DComponent()
+        let interpolationAlpha = clockComp.interpolationAlpha
         let pixelsPerUnit = Float(cameraComp.pixelsPerUnit)
         let cameraCenterWorld = simd_float2(Float(cameraComp.center.x), Float(cameraComp.center.y))
         let worldHalfExtents = simd_float2(viewportPixelSize.x/pixelsPerUnit/2, viewportPixelSize.y/pixelsPerUnit/2)
@@ -79,7 +82,7 @@ final class RenderSystem: System
         // Build render pass
         // Always clear + present even if we have to wait for the pipeline to be ready to draw.
         let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = drawable.texture
+        pass.colorAttachments[0].texture     = drawable.texture
         pass.colorAttachments[0].loadAction  = .clear
         pass.colorAttachments[0].storeAction = .store
         pass.colorAttachments[0].clearColor  = surfaceComp.clearColor
@@ -96,20 +99,12 @@ final class RenderSystem: System
             commandEncoder.setRenderPipelineState(pipeline)
             
             // Gather renderable sprites (skip if none).
-            let renderComps: [SpriteRenderComponent] = EntityAdmin.shared.getComponents(ofType: SpriteRenderComponent.self) ?? []
+            let renderComps: [SpriteRenderComponent] = admin.getComponents(ofType: SpriteRenderComponent.self) ?? []
             if !renderComps.isEmpty
             {
                 // Batch by texture identity
                 var batches: [ObjectIdentifier: TextureBatch] = [:]
                 batches.reserveCapacity(16) // small, grows geometrically as needed
-                
-                // Inline, branchless NDC helper (flip Y once).
-                @inline(__always)
-                func toNDC(_ p: SIMD2<Float>) -> SIMD2<Float>
-                {
-                    let n = p * invWorldHalfExtents
-                    return SIMD2<Float>(n.x, -n.y)
-                }
                 
                 for renderComp in renderComps where !renderComp.hidden
                 {
@@ -125,46 +120,56 @@ final class RenderSystem: System
                     {
                         batches[key] = TextureBatch(texture: texture)
                     }
+                    
+                    // Interpolated pose
+                    let lerpedPosition = lerpPoint(transformComp.prevPosition, transformComp.position, interpolationAlpha)
+                    let lerpedScale    = lerpSize(transformComp.prevScale, transformComp.scale, interpolationAlpha)
+                    let lerpedAngle    = lerpAngleShortest(
+                        Float(transformComp.prevRotation),
+                        Float(transformComp.rotation),
+                        interpolationAlpha
+                    )
 
-                    // size and center in camera space
-                    let componentWidth  = Float(renderComp.size.width  * transformComp.scale.width)
-                    let componentHeight = Float(renderComp.size.height * transformComp.scale.height)
-                    let componentHalf   = SIMD2<Float>(componentWidth * 0.5, componentHeight * 0.5)
+                    // Size in world units and camera-space center
+                    let componentWidth    = Float(renderComp.size.width  * lerpedScale.width)
+                    let componentHeight   = Float(renderComp.size.height * lerpedScale.height)
+                    let halfSize          = simd_float2(componentWidth * 0.5, componentHeight * 0.5)
+                    let cameraSpaceCenter = simd_float2(lerpedPosition.x, lerpedPosition.y) - cameraCenterWorld
 
-                    let worldCenter    = SIMD2<Float>(Float(transformComp.position.x), Float(transformComp.position.y))
-                    let cameraSpaceCenter = worldCenter - cameraCenterWorld
+                    // Rotation matrix
+                    let cosA = cos(lerpedAngle)
+                    let sinA = sin(lerpedAngle)
+                    let r00  = cosA
+                    let r01 = -sinA
+                    let r10  = sinA
+                    let r11 =  cosA
 
-                    // rotation matrix about center in radians
-                    let angle = Float(transformComp.zRotation)
-                    let cosA  = cos(angle)
-                    let sinA  = sin(angle)
-                    let r00 = cosA,  r01 = -sinA
-                    let r10 = sinA,  r11 =  cosA
+                    // Local corners (centered)
+                    let pBL = simd_float2(-halfSize.x, -halfSize.y)
+                    let pBR = simd_float2( halfSize.x, -halfSize.y)
+                    let pTR = simd_float2( halfSize.x,  halfSize.y)
+                    let pTL = simd_float2(-halfSize.x,  halfSize.y)
 
-                    // local corners (centered)
-                    let pBL = SIMD2<Float>(-componentHalf.x, -componentHalf.y)
-                    let pBR = SIMD2<Float>( componentHalf.x, -componentHalf.y)
-                    let pTR = SIMD2<Float>( componentHalf.x,  componentHalf.y)
-                    let pTL = SIMD2<Float>(-componentHalf.x,  componentHalf.y)
-
-                    // rotate then translate to camera space (no nested funcs)
-                    let bl = SIMD2<Float>(r00 * pBL.x + r01 * pBL.y, r10 * pBL.x + r11 * pBL.y) + cameraSpaceCenter
-                    let br = SIMD2<Float>(r00 * pBR.x + r01 * pBR.y, r10 * pBR.x + r11 * pBR.y) + cameraSpaceCenter
-                    let tr = SIMD2<Float>(r00 * pTR.x + r01 * pTR.y, r10 * pTR.x + r11 * pTR.y) + cameraSpaceCenter
-                    let tl = SIMD2<Float>(r00 * pTL.x + r01 * pTL.y, r10 * pTL.x + r11 * pTL.y) + cameraSpaceCenter
+                    // Rotate then translate to camera space
+                    let bl = simd_float2(r00*pBL.x + r01*pBL.y, r10*pBL.x + r11*pBL.y) + cameraSpaceCenter
+                    let br = simd_float2(r00*pBR.x + r01*pBR.y, r10*pBR.x + r11*pBR.y) + cameraSpaceCenter
+                    let tr = simd_float2(r00*pTR.x + r01*pTR.y, r10*pTR.x + r11*pTR.y) + cameraSpaceCenter
+                    let tl = simd_float2(r00*pTL.x + r01*pTL.y, r10*pTL.x + r11*pTL.y) + cameraSpaceCenter
 
                     // UVs + color
                     let uv = renderComp.uv
-                    let u0 = uv.x, v0 = uv.y, u1 = uv.z, v1 = uv.w
-                    let color = renderComp.tint
+                    let u0 = uv.x
+                    let v0 = uv.y
+                    let u1 = uv.z
+                    let v1 = uv.w
+                    let col = renderComp.tint
 
-                    // toNDC(_:) should take SIMD2<Float> and flip Y once
-                    let v0s = SpriteVertex(position: toNDC(bl), uv: SIMD2<Float>(u0, v0), color: color)
-                    let v1s = SpriteVertex(position: toNDC(br), uv: SIMD2<Float>(u1, v0), color: color)
-                    let v2s = SpriteVertex(position: toNDC(tr), uv: SIMD2<Float>(u1, v1), color: color)
-                    let v3s = SpriteVertex(position: toNDC(tl), uv: SIMD2<Float>(u0, v1), color: color)
+                    // Build six vertices (two triangles), NDC transform at write
+                    let v0s = SpriteVertex(position: toNDC(bl, invHalf: invWorldHalfExtents), uv: simd_float2(u0, v0), color: col)
+                    let v1s = SpriteVertex(position: toNDC(br, invHalf: invWorldHalfExtents), uv: simd_float2(u1, v0), color: col)
+                    let v2s = SpriteVertex(position: toNDC(tr, invHalf: invWorldHalfExtents), uv: simd_float2(u1, v1), color: col)
+                    let v3s = SpriteVertex(position: toNDC(tl, invHalf: invWorldHalfExtents), uv: simd_float2(u0, v1), color: col)
 
-                    // CCW triangles
                     batches[key]!.verts.append(contentsOf: [v0s, v1s, v2s, v0s, v2s, v3s])
                 }
 
@@ -200,5 +205,49 @@ final class RenderSystem: System
         commandEncoder.endEncoding()
         commandBuffer.present(drawable)
         commandBuffer.commit()
+    }
+    
+    @inline(__always)
+    private func toNDC(_ p: simd_float2, invHalf: simd_float2) -> simd_float2
+    {
+        let n = p * invHalf
+        return simd_float2(n.x, -n.y) // flip Y exactly once
+    }
+    
+    @inline(__always)
+    private func lerp(_ a: Float, _ b: Float, _ t: Float) -> Float
+    {
+        a + (b - a) * t
+    }
+    
+    @inline(__always)
+    private func lerpPoint(_ a: CGPoint, _ b: CGPoint, _ t: Float) -> simd_float2
+    {
+        simd_float2(lerp(Float(a.x), Float(b.x), t), lerp(Float(a.y), Float(b.y), t))
+    }
+    
+    @inline(__always)
+    private func lerpSize(_ a: CGSize, _ b: CGSize, _ t: Float) -> CGSize
+    {
+        CGSize(
+            width:  CGFloat(lerp(Float(a.width),  Float(b.width),  t)),
+            height: CGFloat(lerp(Float(a.height), Float(b.height), t))
+        )
+    }
+    
+    @inline(__always)
+    private func lerpAngleShortest(_ a: Float, _ b: Float, _ t: Float) -> Float
+    {
+        var d = fmodf(b - a, Float.pi * 2)
+        if d >  Float.pi
+        {
+            d -= 2 * Float.pi
+        }
+        
+        if d < -Float.pi
+        {
+            d += 2 * Float.pi
+        }
+        return a + d * t
     }
 }

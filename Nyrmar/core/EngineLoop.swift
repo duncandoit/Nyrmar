@@ -1,5 +1,5 @@
 //
-//  GameLoop.swift
+//  EngineLoop.swift
 //  Nyrmar
 //
 //  Created by Zachary Duncan on 8/13/25.
@@ -8,15 +8,21 @@
 #if os(iOS) || os(tvOS)
 import QuartzCore
 
-final class GameLoop
+final class EngineLoop
 {
-    static let shared = GameLoop()
+    static let shared = EngineLoop()
     
+    private let m_Admin = EntityAdmin()
     private var m_DisplayLink: CADisplayLink?
     private var m_LastTime: CFTimeInterval = 0
     private(set) var isRunning = false
 
     private init() {}
+    
+    func admin() -> EntityAdmin
+    {
+        return m_Admin
+    }
 
     func start()
     {
@@ -52,7 +58,8 @@ final class GameLoop
         }
         let deltaTime = displayLink.timestamp - m_LastTime
         m_LastTime = displayLink.timestamp
-        EntityAdmin.shared.tick(deltaTime: deltaTime)
+
+        m_Admin.fixedUpdate(rawDeltaTime: deltaTime)
     }
 }
 #endif
@@ -60,10 +67,11 @@ final class GameLoop
 #if os(macOS)
 import CoreVideo
 
-final class GameLoop
+final class EnglineLoop
 {
-    static let shared = GameLoop()
+    static let shared = EnglineLoop()
     
+    private let m_Admin = EntityAdmin()
     private var m_DisplayLink: CVDisplayLink?
     private var m_LastTime: CFTimeInterval = 0
     private(set) var isRunning = false
@@ -126,7 +134,7 @@ final class GameLoop
         // If rendering touches UI state, hop to main.
         DispatchQueue.main.async
         {
-            EntityAdmin.shared.tick(deltaTime: deltaTime)
+            m_Admin.fixedUpdate(rawDeltaTime: deltaTime)
         }
     }
 }

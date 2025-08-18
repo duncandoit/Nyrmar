@@ -23,7 +23,7 @@ class GameViewController: UIViewController
         view.layer.addSublayer(metalLayer)
 
         // Ensure the viewport entity (singleton surface + camera)
-        EntityAdmin.shared.initializeMetalViewport(layer: metalLayer, pixelsPerUnit: 100)
+        EngineLoop.shared.admin().initializeMetalViewport(layer: metalLayer, pixelsPerUnit: 100)
     }
 
     override func viewDidLayoutSubviews()
@@ -38,13 +38,13 @@ class GameViewController: UIViewController
     override func viewDidAppear(_ animated: Bool)
     {
         super.viewDidAppear(animated)
-        GameLoop.shared.start()
+        EngineLoop.shared.start()
     }
 
     override func viewWillDisappear(_ animated: Bool)
     {
         super.viewWillDisappear(animated)
-        GameLoop.shared.stop()
+        EngineLoop.shared.stop()
     }
     
     func touch(at screenSpacePoint: CGPoint, phase: PointerPhase)
@@ -56,7 +56,7 @@ class GameViewController: UIViewController
             screenLocation:  screenSpacePoint
         )
         
-        EntityAdmin.shared.inputComponent().pointerEvents.append(pointerData)
+        EngineLoop.shared.admin().inputComponent().pointerEvents.append(pointerData)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)

@@ -11,8 +11,8 @@ import Foundation
 //{
 //    let requiredComponent: ComponentTypeID = InputComponent.typeID
 //
-//    func update(deltaTime: TimeInterval, component: any Component)
+//    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
 //    {
-//        EntityAdmin.shared.removeComponent(ofType: InputComponent.typeID, from: EntityAdmin.shared.getLocalPlayerThrallEntity())
+//        admin.removeComponent(ofType: InputComponent.typeID, from: admin.getLocalPlayerThrallEntity())
 //    }
 //}

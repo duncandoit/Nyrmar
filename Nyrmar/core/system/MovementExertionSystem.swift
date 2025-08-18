@@ -13,7 +13,7 @@ final class MovementExertionSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveExertionComponent.typeID
 
-    func update(deltaTime dt: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let exertionComp = component as! MoveExertionComponent
         guard let moveStateComp = exertionComp.sibling(MoveStateComponent.self) else
@@ -29,7 +29,6 @@ final class MovementExertionSystem: System
             return
         }
 
-        let deltaTime = CGFloat(max(dt, 0))
         var targetVelocity = CGVector.zero
         var wantVelocity = false
 

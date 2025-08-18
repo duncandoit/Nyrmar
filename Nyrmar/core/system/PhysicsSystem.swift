@@ -12,10 +12,14 @@ final class PhysicsSystem: System
 {
     let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
 
-    func update(deltaTime dt: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let moveStateComp = component as! MoveStateComponent
         guard let physicsComp = moveStateComp.sibling(PhysicsMaterialComponent.self) else
+        {
+            return
+        }
+        guard !physicsComp.ignorePhysics else
         {
             return
         }
@@ -24,7 +28,6 @@ final class PhysicsSystem: System
             return
         }
         
-        let deltaTime = CGFloat(max(dt, 0))
         let inverseMass: CGFloat = 1.0 / physicsComp.mass
 
         // Kinematic / immovable entities: consume impulses, no physics adjustments.

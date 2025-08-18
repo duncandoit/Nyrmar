@@ -42,7 +42,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate
 
 //    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?)
 //    {
-//        guard let inputComp = EntityAdmin.shared.getLocalPlayerInputComponent() else
+//        guard let inputComp = admin.getLocalPlayerInputComponent() else
 //        {
 //            return
 //        }
@@ -75,7 +75,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate
 //    
 //    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?)
 //    {
-//        guard let inputComp = EntityAdmin.shared.getLocalPlayerInputComponent() else
+//        guard let inputComp = admin.getLocalPlayerInputComponent() else
 //        {
 //            return
 //        }

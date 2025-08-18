@@ -12,10 +12,10 @@ final class SpriteSpawnSystem: System
 {
     let requiredComponent = SpritePrefabComponent.typeID
     
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let prefabComp = component as! SpritePrefabComponent
-        guard let cacheComp = EntityAdmin.shared.metalTextureCacheComponent(),
+        guard let cacheComp = admin.metalTextureCacheComponent(),
             let transformComp: TransformComponent = prefabComp.sibling(TransformComponent.self),
             let loader = cacheComp.textureLoader
         else
@@ -81,7 +81,7 @@ final class SpriteSpawnSystem: System
             renderComp.size = prefabComp.size ?? transformComp.scale
         }
 
-        EntityAdmin.shared.addSibling(renderComp, to: prefabComp)
-        EntityAdmin.shared.removeComponent(prefabComp)
+        admin.addSibling(renderComp, to: prefabComp)
+        admin.removeComponent(prefabComp)
     }
 }

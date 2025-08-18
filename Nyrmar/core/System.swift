@@ -11,5 +11,5 @@ protocol System
 {
     /// Declares the component type it operates on
     var requiredComponent: ComponentTypeID { get }
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
 }

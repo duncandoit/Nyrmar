@@ -12,10 +12,10 @@ final class TilemapSpawnSystem: System
 {
     let requiredComponent = TilemapPrefabComponent.typeID
     
-    func update(deltaTime: TimeInterval, component: any Component)
+    func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let prefabComp = component as! TilemapPrefabComponent
-        guard let cacheComp = EntityAdmin.shared.metalTextureCacheComponent() else
+        guard let cacheComp = admin.metalTextureCacheComponent() else
         {
             return
         }
@@ -54,7 +54,7 @@ final class TilemapSpawnSystem: System
         renderComp.gridSize = prefabComp.gridSize
         renderComp.uvLUT    = lut
 
-        EntityAdmin.shared.addSibling(renderComp, to: prefabComp)
-        EntityAdmin.shared.removeComponent(prefabComp)
+        admin.addSibling(renderComp, to: prefabComp)
+        admin.removeComponent(prefabComp)
     }
 }

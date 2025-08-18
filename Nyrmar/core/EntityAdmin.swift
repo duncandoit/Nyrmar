@@ -11,8 +11,6 @@ typealias Entity = UUID
 
 class EntityAdmin
 {
-    static let shared: EntityAdmin = EntityAdmin()
-    
     /// The canonical collection of all Components
     private var m_ComponentsByType: [ComponentTypeID: [Component]] = [:]
     
@@ -23,6 +21,10 @@ class EntityAdmin
     private var m_AnchorComponentByEntity: [Entity: Component] = [:]
     
     private var m_Systems: [System]
+    private let m_ClockPreSimSystem: ClockPreSimSystem
+    private let m_ClockPostSimSystem: ClockPostSimSystem
+    private let m_InputSystem: InputSystem
+    private let m_RenderSystem: RenderSystem
     
     // MARK: - Singleton Components
     
@@ -35,8 +37,8 @@ class EntityAdmin
     private weak var m_MetalTextureCacheComponent: Single_MetalTextureCacheComponent?
     
     // Sim Clock
-    private var m_SimClockEntity: Entity?
-    private weak var m_SimClockComponent: Single_SimClockComponent?
+    private var m_ClockEntity: Entity?
+    private weak var m_ClockComponent: Single_ClockComponent?
     
     // Input
     private var m_InputEntity: Entity?
@@ -46,17 +48,24 @@ class EntityAdmin
     private var m_PlayerBindingsEntity: Entity?
     private weak var m_PlayerBindingsComponent: Single_PlayerBindingsComponent?
     
+    // Game Settings
+    private weak var m_SettingsComponent: Single_GameSettingsComponent?
+    
     // Test Sprite
     private var m_TestSpriteEntity: Entity!
     
     // MARK: - Initializers
     
-    private init()
+    required init()
     {
         // Initialize Systems
+        m_ClockPreSimSystem = ClockPreSimSystem()
+        m_ClockPostSimSystem = ClockPostSimSystem()
+        m_InputSystem = InputSystem()
+        m_RenderSystem = RenderSystem()
+        
         m_Systems = [
-            SimulationClockSystem(),
-            InputSystem(),
+            ClockSimSystem(),
                 // TargetName
                 // LifetimeEntity
                 // Path data invalidate
@@ -89,7 +98,6 @@ class EntityAdmin
             ViewportSystem(),
             SpriteSpawnSystem(),
             TilemapSpawnSystem(),
-            RenderSystem(),
                 //LifeSpanSystem,
                 // SpawnOnDestroy
             //InputCleanupSystem()
@@ -178,6 +186,9 @@ class EntityAdmin
         let collisionComp = CollisionComponent(shape: .aabb(worldSize))
         let thrallComp = ThrallComponent(controllerID: inputComponent().controllerID)
         let physicsComp = PhysicsMaterialComponent()
+        physicsComp.maxSpeed = 20
+        physicsComp.linearDrag = 10
+        
         let forceComp = ForceAccumulatorComponent()
         let moveStateComp = MoveStateComponent()
         let baseStatsComp = BaseStatsComponent()
@@ -246,18 +257,31 @@ class EntityAdmin
         return bindingsComp
     }
     
-    func simClockComponent() -> Single_SimClockComponent
+    func clockComponent() -> Single_ClockComponent
     {
-        if let clockComp = m_SimClockComponent
+        if let clockComp = m_ClockComponent
         {
             return clockComp
         }
         
-        let clockComp = Single_SimClockComponent()
+        let clockComp = Single_ClockComponent()
         let entity = addEntity(with: clockComp)!
-        m_SimClockEntity = entity
-        m_SimClockComponent = clockComp
+        m_ClockEntity = entity
+        m_ClockComponent = clockComp
         return clockComp
+    }
+    
+    func settingsComponent() -> Single_GameSettingsComponent
+    {
+        if let settingsComp = m_SettingsComponent
+        {
+            return settingsComp
+        }
+        
+        let settingsComp = Single_GameSettingsComponent()
+        _ = addEntity(with: settingsComp)!
+        m_SettingsComponent = settingsComp
+        return settingsComp
     }
     
     // MARK: - Helper Accessors
@@ -563,19 +587,43 @@ class EntityAdmin
         addComponent(component, to: entity)
     }
     
-    // MARK: - Systems Tick
-    
-    func tick(deltaTime: TimeInterval)
+    // MARK: - Update
+
+    func variableUpdate(rawDeltaTime: TimeInterval)
     {
-        //print("[" + #fileID + "]: " + #function + " -> Entity count:    \(allEntities().count).")
-        //print("[" + #fileID + "]: " + #function + " -> Component count: \(m_ComponentsByType.count).")
+        let clockComp = clockComponent()
+        m_ClockPreSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
+        m_InputSystem.update(deltaTime: rawDeltaTime, component: inputComponent(), admin: self)
         
+        let clampedDeltaTime = min(max(rawDeltaTime, 0.0), 0.25)
+        updateSystems(deltaTime: clampedDeltaTime)
+        
+        m_ClockPostSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
+        m_RenderSystem.update(deltaTime: clockComp.frameTime, component: metalSurfaceComponent(), admin: self)
+    }
+    
+    func fixedUpdate(rawDeltaTime: TimeInterval)
+    {
+        let clockComp = clockComponent()
+        m_ClockPreSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
+        m_InputSystem.update(deltaTime: rawDeltaTime, component: inputComponent(), admin: self)
+
+        for _ in 0 ..< clockComp.simulationSteps
+        {
+            updateSystems(deltaTime: clockComp.frameTime)
+        }
+        
+        m_ClockPostSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
+        m_RenderSystem.update(deltaTime: clockComp.frameTime, component: metalSurfaceComponent(), admin: self)
+    }
+    
+    private func updateSystems(deltaTime: TimeInterval)
+    {
         for system in m_Systems
         {
             let componentTypeID = system.requiredComponent
             guard let components = m_ComponentsByType[componentTypeID] else
             {
-                //print("[" + #fileID + "]: " + #function + " -> Component does not exist for type:\(String(describing: component)).");
                 continue
             }
 
@@ -584,7 +632,7 @@ class EntityAdmin
             {
                 // Any other component that the system needs should be searched
                 // for in the siblings to this component.
-                system.update(deltaTime: deltaTime, component: component)
+                system.update(deltaTime: deltaTime, component: component, admin: self)
             }
         }
     }
