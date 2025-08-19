@@ -6,43 +6,41 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXContainerItemProxy section */
-		C3DAF24B2E3BDB1B00C46474 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = C3DAF2292E3BDB1A00C46474 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C3DAF2302E3BDB1A00C46474;
-			remoteInfo = Nyrmar;
-		};
-		C3DAF2552E3BDB1B00C46474 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = C3DAF2292E3BDB1A00C46474 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C3DAF2302E3BDB1A00C46474;
-			remoteInfo = Nyrmar;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
-		C3DAF2312E3BDB1A00C46474 /* Nyrmar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nyrmar.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C3DAF24A2E3BDB1B00C46474 /* NyrmarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NyrmarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		C3DAF2542E3BDB1B00C46474 /* NyrmarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NyrmarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C37774AD2E5498A60009D73D /* nyrmar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nyrmar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C37774BE2E5498A60009D73D /* nyrmar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nyrmar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C37774CE2E5498A60009D73D /* nyrmar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nyrmar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C3DAF26D2E3BDC9B00C46474 /* Exceptions for "Nyrmar" folder in "NyrmarTests" target */ = {
+		C37774E42E5498A60009D73D /* Exceptions for "korin-engine" folder in "nyrmar iOS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Assets.xcassets,
+				core/Component.swift,
+				core/component/BaseStatsComponent.swift,
 				core/component/CollisionComponent.swift,
+				core/component/MoveExertionComponent.swift,
+				core/component/MoveStateComponent.swift,
+				core/component/PhysicsStateComponent.swift,
+				core/component/PhysicsTermComponent.swift,
+				core/component/Single_Camera2DComponent.swift,
 				core/component/Single_ClockComponent.swift,
 				core/component/Single_GameSettingsComponent.swift,
 				core/component/Single_InputComponent.swift,
+				core/component/Single_MetalSurfaceComponent.swift,
 				core/component/Single_MetalTextureCacheComponent.swift,
 				core/component/Single_PlayerBindingsComponent.swift,
 				core/component/SpriteComponents.swift,
+				core/component/ThrallComponent.swift,
 				core/component/TilemapComponents.swift,
+				core/component/TransformComponent.swift,
+				core/EngineLoop.swift,
+				core/EntityAdmin.swift,
 				core/shader/sprite2d.metal,
+				core/System.swift,
 				core/system/ClockSystems.swift,
+				core/system/CommandSystem.swift,
 				core/system/InputCleanupSystem.swift,
 				core/system/InputSystem.swift,
 				core/system/MovementExertionSystem.swift,
@@ -53,49 +51,143 @@
 				core/system/TilemapSpawnSystem.swift,
 				core/system/ViewportSystem.swift,
 				core/util/AssetManagerUtil.swift,
+				core/util/CGVectorUtil.swift,
 				core/util/UInt64Util.swift,
 			);
-			target = C3DAF2492E3BDB1B00C46474 /* NyrmarTests */;
+			target = C37774AC2E5498A60009D73D /* nyrmar iOS */;
+		};
+		C37774E92E5498A60009D73D /* Exceptions for "korin-engine" folder in "nyrmar tvOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				core/Component.swift,
+				core/component/BaseStatsComponent.swift,
+				core/component/CollisionComponent.swift,
+				core/component/MoveExertionComponent.swift,
+				core/component/MoveStateComponent.swift,
+				core/component/PhysicsStateComponent.swift,
+				core/component/PhysicsTermComponent.swift,
+				core/component/Single_Camera2DComponent.swift,
+				core/component/Single_ClockComponent.swift,
+				core/component/Single_GameSettingsComponent.swift,
+				core/component/Single_InputComponent.swift,
+				core/component/Single_MetalSurfaceComponent.swift,
+				core/component/Single_MetalTextureCacheComponent.swift,
+				core/component/Single_PlayerBindingsComponent.swift,
+				core/component/SpriteComponents.swift,
+				core/component/ThrallComponent.swift,
+				core/component/TilemapComponents.swift,
+				core/component/TransformComponent.swift,
+				core/EngineLoop.swift,
+				core/EntityAdmin.swift,
+				core/shader/sprite2d.metal,
+				core/System.swift,
+				core/system/ClockSystems.swift,
+				core/system/CommandSystem.swift,
+				core/system/InputCleanupSystem.swift,
+				core/system/InputSystem.swift,
+				core/system/MovementExertionSystem.swift,
+				core/system/MovementStateSystem.swift,
+				core/system/PhysicsSystem.swift,
+				core/system/RenderSystem.swift,
+				core/system/SpriteSpawnSystem.swift,
+				core/system/TilemapSpawnSystem.swift,
+				core/system/ViewportSystem.swift,
+				core/util/AssetManagerUtil.swift,
+				core/util/CGVectorUtil.swift,
+				core/util/UInt64Util.swift,
+			);
+			target = C37774BD2E5498A60009D73D /* nyrmar tvOS */;
+		};
+		C37774EE2E5498A60009D73D /* Exceptions for "korin-engine" folder in "nyrmar macOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				core/Component.swift,
+				core/component/BaseStatsComponent.swift,
+				core/component/CollisionComponent.swift,
+				core/component/MoveExertionComponent.swift,
+				core/component/MoveStateComponent.swift,
+				core/component/PhysicsStateComponent.swift,
+				core/component/PhysicsTermComponent.swift,
+				core/component/Single_Camera2DComponent.swift,
+				core/component/Single_ClockComponent.swift,
+				core/component/Single_GameSettingsComponent.swift,
+				core/component/Single_InputComponent.swift,
+				core/component/Single_MetalSurfaceComponent.swift,
+				core/component/Single_MetalTextureCacheComponent.swift,
+				core/component/Single_PlayerBindingsComponent.swift,
+				core/component/SpriteComponents.swift,
+				core/component/ThrallComponent.swift,
+				core/component/TilemapComponents.swift,
+				core/component/TransformComponent.swift,
+				core/EngineLoop.swift,
+				core/EntityAdmin.swift,
+				core/shader/sprite2d.metal,
+				core/System.swift,
+				core/system/ClockSystems.swift,
+				core/system/CommandSystem.swift,
+				core/system/InputCleanupSystem.swift,
+				core/system/InputSystem.swift,
+				core/system/MovementExertionSystem.swift,
+				core/system/MovementStateSystem.swift,
+				core/system/PhysicsSystem.swift,
+				core/system/RenderSystem.swift,
+				core/system/SpriteSpawnSystem.swift,
+				core/system/TilemapSpawnSystem.swift,
+				core/system/ViewportSystem.swift,
+				core/util/AssetManagerUtil.swift,
+				core/util/CGVectorUtil.swift,
+				core/util/UInt64Util.swift,
+			);
+			target = C37774CD2E5498A60009D73D /* nyrmar macOS */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C3DAF2332E3BDB1A00C46474 /* Nyrmar */ = {
+		C37774A42E5498A30009D73D /* korin-engine */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				C3DAF26D2E3BDC9B00C46474 /* Exceptions for "Nyrmar" folder in "NyrmarTests" target */,
+				C37774E42E5498A60009D73D /* Exceptions for "korin-engine" folder in "nyrmar iOS" target */,
+				C37774E92E5498A60009D73D /* Exceptions for "korin-engine" folder in "nyrmar tvOS" target */,
+				C37774EE2E5498A60009D73D /* Exceptions for "korin-engine" folder in "nyrmar macOS" target */,
 			);
-			path = Nyrmar;
+			path = "korin-engine";
 			sourceTree = "<group>";
 		};
-		C3DAF24D2E3BDB1B00C46474 /* NyrmarTests */ = {
+		C37774AF2E5498A60009D73D /* nyrmar-ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NyrmarTests;
+			path = "nyrmar-ios";
 			sourceTree = "<group>";
 		};
-		C3DAF2572E3BDB1B00C46474 /* NyrmarUITests */ = {
+		C37774BF2E5498A60009D73D /* nyrmar-tvos */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NyrmarUITests;
+			path = "nyrmar-tvos";
+			sourceTree = "<group>";
+		};
+		C37774CF2E5498A60009D73D /* nyrmar-macos */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "nyrmar-macos";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		C3DAF22E2E3BDB1A00C46474 /* Frameworks */ = {
+		C37774AA2E5498A60009D73D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3DAF2472E3BDB1B00C46474 /* Frameworks */ = {
+		C37774BB2E5498A60009D73D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3DAF2512E3BDB1B00C46474 /* Frameworks */ = {
+		C37774CB2E5498A60009D73D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -105,22 +197,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C3DAF2282E3BDB1A00C46474 = {
+		C377749F2E5498A30009D73D = {
 			isa = PBXGroup;
 			children = (
-				C3DAF2332E3BDB1A00C46474 /* Nyrmar */,
-				C3DAF24D2E3BDB1B00C46474 /* NyrmarTests */,
-				C3DAF2572E3BDB1B00C46474 /* NyrmarUITests */,
-				C3DAF2322E3BDB1A00C46474 /* Products */,
+				C37774A42E5498A30009D73D /* korin-engine */,
+				C37774AF2E5498A60009D73D /* nyrmar-ios */,
+				C37774BF2E5498A60009D73D /* nyrmar-tvos */,
+				C37774CF2E5498A60009D73D /* nyrmar-macos */,
+				C37774AE2E5498A60009D73D /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		C3DAF2322E3BDB1A00C46474 /* Products */ = {
+		C37774AE2E5498A60009D73D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C3DAF2312E3BDB1A00C46474 /* Nyrmar.app */,
-				C3DAF24A2E3BDB1B00C46474 /* NyrmarTests.xctest */,
-				C3DAF2542E3BDB1B00C46474 /* NyrmarUITests.xctest */,
+				C37774AD2E5498A60009D73D /* nyrmar.app */,
+				C37774BE2E5498A60009D73D /* nyrmar.app */,
+				C37774CE2E5498A60009D73D /* nyrmar.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -128,134 +221,130 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C3DAF2302E3BDB1A00C46474 /* Nyrmar */ = {
+		C37774AC2E5498A60009D73D /* nyrmar iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C3DAF25E2E3BDB1B00C46474 /* Build configuration list for PBXNativeTarget "Nyrmar" */;
+			buildConfigurationList = C37774E52E5498A60009D73D /* Build configuration list for PBXNativeTarget "nyrmar iOS" */;
 			buildPhases = (
-				C3DAF22D2E3BDB1A00C46474 /* Sources */,
-				C3DAF22E2E3BDB1A00C46474 /* Frameworks */,
-				C3DAF22F2E3BDB1A00C46474 /* Resources */,
+				C37774A92E5498A60009D73D /* Sources */,
+				C37774AA2E5498A60009D73D /* Frameworks */,
+				C37774AB2E5498A60009D73D /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C3DAF2332E3BDB1A00C46474 /* Nyrmar */,
+				C37774AF2E5498A60009D73D /* nyrmar-ios */,
 			);
-			name = Nyrmar;
+			name = "nyrmar iOS";
 			packageProductDependencies = (
 			);
-			productName = Nyrmar;
-			productReference = C3DAF2312E3BDB1A00C46474 /* Nyrmar.app */;
+			productName = "Korin iOS";
+			productReference = C37774AD2E5498A60009D73D /* nyrmar.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C3DAF2492E3BDB1B00C46474 /* NyrmarTests */ = {
+		C37774BD2E5498A60009D73D /* nyrmar tvOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C3DAF2612E3BDB1B00C46474 /* Build configuration list for PBXNativeTarget "NyrmarTests" */;
+			buildConfigurationList = C37774EA2E5498A60009D73D /* Build configuration list for PBXNativeTarget "nyrmar tvOS" */;
 			buildPhases = (
-				C3DAF2462E3BDB1B00C46474 /* Sources */,
-				C3DAF2472E3BDB1B00C46474 /* Frameworks */,
-				C3DAF2482E3BDB1B00C46474 /* Resources */,
+				C37774BA2E5498A60009D73D /* Sources */,
+				C37774BB2E5498A60009D73D /* Frameworks */,
+				C37774BC2E5498A60009D73D /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C3DAF24C2E3BDB1B00C46474 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				C3DAF24D2E3BDB1B00C46474 /* NyrmarTests */,
+				C37774BF2E5498A60009D73D /* nyrmar-tvos */,
 			);
-			name = NyrmarTests;
+			name = "nyrmar tvOS";
 			packageProductDependencies = (
 			);
-			productName = NyrmarTests;
-			productReference = C3DAF24A2E3BDB1B00C46474 /* NyrmarTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
+			productName = "Korin tvOS";
+			productReference = C37774BE2E5498A60009D73D /* nyrmar.app */;
+			productType = "com.apple.product-type.application";
 		};
-		C3DAF2532E3BDB1B00C46474 /* NyrmarUITests */ = {
+		C37774CD2E5498A60009D73D /* nyrmar macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C3DAF2642E3BDB1B00C46474 /* Build configuration list for PBXNativeTarget "NyrmarUITests" */;
+			buildConfigurationList = C37774EF2E5498A60009D73D /* Build configuration list for PBXNativeTarget "nyrmar macOS" */;
 			buildPhases = (
-				C3DAF2502E3BDB1B00C46474 /* Sources */,
-				C3DAF2512E3BDB1B00C46474 /* Frameworks */,
-				C3DAF2522E3BDB1B00C46474 /* Resources */,
+				C37774CA2E5498A60009D73D /* Sources */,
+				C37774CB2E5498A60009D73D /* Frameworks */,
+				C37774CC2E5498A60009D73D /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C3DAF2562E3BDB1B00C46474 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				C3DAF2572E3BDB1B00C46474 /* NyrmarUITests */,
+				C37774CF2E5498A60009D73D /* nyrmar-macos */,
 			);
-			name = NyrmarUITests;
+			name = "nyrmar macOS";
 			packageProductDependencies = (
 			);
-			productName = NyrmarUITests;
-			productReference = C3DAF2542E3BDB1B00C46474 /* NyrmarUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
+			productName = "Korin macOS";
+			productReference = C37774CE2E5498A60009D73D /* nyrmar.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		C3DAF2292E3BDB1A00C46474 /* Project object */ = {
+		C37774A02E5498A30009D73D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
-					C3DAF2302E3BDB1A00C46474 = {
+					C37774AC2E5498A60009D73D = {
 						CreatedOnToolsVersion = 16.4;
 					};
-					C3DAF2492E3BDB1B00C46474 = {
+					C37774BD2E5498A60009D73D = {
 						CreatedOnToolsVersion = 16.4;
-						TestTargetID = C3DAF2302E3BDB1A00C46474;
 					};
-					C3DAF2532E3BDB1B00C46474 = {
+					C37774CD2E5498A60009D73D = {
 						CreatedOnToolsVersion = 16.4;
-						TestTargetID = C3DAF2302E3BDB1A00C46474;
 					};
 				};
 			};
-			buildConfigurationList = C3DAF22C2E3BDB1A00C46474 /* Build configuration list for PBXProject "Nyrmar" */;
+			buildConfigurationList = C37774A32E5498A30009D73D /* Build configuration list for PBXProject "nyrmar" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = C3DAF2282E3BDB1A00C46474;
+			mainGroup = C377749F2E5498A30009D73D;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = C3DAF2322E3BDB1A00C46474 /* Products */;
+			productRefGroup = C37774AE2E5498A60009D73D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C3DAF2302E3BDB1A00C46474 /* Nyrmar */,
-				C3DAF2492E3BDB1B00C46474 /* NyrmarTests */,
-				C3DAF2532E3BDB1B00C46474 /* NyrmarUITests */,
+				C37774AC2E5498A60009D73D /* nyrmar iOS */,
+				C37774BD2E5498A60009D73D /* nyrmar tvOS */,
+				C37774CD2E5498A60009D73D /* nyrmar macOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		C3DAF22F2E3BDB1A00C46474 /* Resources */ = {
+		C37774AB2E5498A60009D73D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3DAF2482E3BDB1B00C46474 /* Resources */ = {
+		C37774BC2E5498A60009D73D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3DAF2522E3BDB1B00C46474 /* Resources */ = {
+		C37774CC2E5498A60009D73D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -265,21 +354,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		C3DAF22D2E3BDB1A00C46474 /* Sources */ = {
+		C37774A92E5498A60009D73D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3DAF2462E3BDB1B00C46474 /* Sources */ = {
+		C37774BA2E5498A60009D73D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3DAF2502E3BDB1B00C46474 /* Sources */ = {
+		C37774CA2E5498A60009D73D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -288,21 +377,200 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		C3DAF24C2E3BDB1B00C46474 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C3DAF2302E3BDB1A00C46474 /* Nyrmar */;
-			targetProxy = C3DAF24B2E3BDB1B00C46474 /* PBXContainerItemProxy */;
-		};
-		C3DAF2562E3BDB1B00C46474 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C3DAF2302E3BDB1A00C46474 /* Nyrmar */;
-			targetProxy = C3DAF2552E3BDB1B00C46474 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		C3DAF25C2E3BDB1B00C46474 /* Debug */ = {
+		C37774E62E5498A60009D73D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nyrmar iOS";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.nyrmar.ios;
+				PRODUCT_NAME = nyrmar;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "korin-engine/ShaderTypes.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C37774E72E5498A60009D73D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nyrmar iOS";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.nyrmar.ios;
+				PRODUCT_NAME = nyrmar;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "korin-engine/ShaderTypes.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C37774EB2E5498A60009D73D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "tvOS App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nyrmar tvOS";
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.finalfallgames.nyrmar-tvos";
+				PRODUCT_NAME = nyrmar;
+				SDKROOT = appletvos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "korin-engine/ShaderTypes.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 18.5;
+			};
+			name = Debug;
+		};
+		C37774EC2E5498A60009D73D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "tvOS App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nyrmar tvOS";
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.finalfallgames.nyrmar-tvos";
+				PRODUCT_NAME = nyrmar;
+				SDKROOT = appletvos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "korin-engine/ShaderTypes.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 18.5;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C37774F02E5498A60009D73D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "nyrmar-macos/Nyrmar_macOS.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nyrmar macOS";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.nyrmar.macos;
+				PRODUCT_NAME = nyrmar;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "korin-engine/ShaderTypes.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C37774F12E5498A60009D73D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "nyrmar-macos/Nyrmar_macOS.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nyrmar macOS";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.nyrmar.macos;
+				PRODUCT_NAME = nyrmar;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "korin-engine/ShaderTypes.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C37774F32E5498A60009D73D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -337,6 +605,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -354,18 +623,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		C3DAF25D2E3BDB1B00C46474 /* Release */ = {
+		C37774F42E5498A60009D73D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -400,6 +667,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -411,180 +679,53 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		C3DAF25F2E3BDB1B00C46474 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.Nyrmar;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		C3DAF2602E3BDB1B00C46474 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8MJH2BEKLZ;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.Nyrmar;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		C3DAF2622E3BDB1B00C46474 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.NyrmarTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Nyrmar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Nyrmar";
-			};
-			name = Debug;
-		};
-		C3DAF2632E3BDB1B00C46474 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.NyrmarTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Nyrmar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Nyrmar";
-			};
-			name = Release;
-		};
-		C3DAF2652E3BDB1B00C46474 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.NyrmarUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Nyrmar;
-			};
-			name = Debug;
-		};
-		C3DAF2662E3BDB1B00C46474 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.finalfallgames.NyrmarUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Nyrmar;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C3DAF22C2E3BDB1A00C46474 /* Build configuration list for PBXProject "Nyrmar" */ = {
+		C37774A32E5498A30009D73D /* Build configuration list for PBXProject "nyrmar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C3DAF25C2E3BDB1B00C46474 /* Debug */,
-				C3DAF25D2E3BDB1B00C46474 /* Release */,
+				C37774F32E5498A60009D73D /* Debug */,
+				C37774F42E5498A60009D73D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C3DAF25E2E3BDB1B00C46474 /* Build configuration list for PBXNativeTarget "Nyrmar" */ = {
+		C37774E52E5498A60009D73D /* Build configuration list for PBXNativeTarget "nyrmar iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C3DAF25F2E3BDB1B00C46474 /* Debug */,
-				C3DAF2602E3BDB1B00C46474 /* Release */,
+				C37774E62E5498A60009D73D /* Debug */,
+				C37774E72E5498A60009D73D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C3DAF2612E3BDB1B00C46474 /* Build configuration list for PBXNativeTarget "NyrmarTests" */ = {
+		C37774EA2E5498A60009D73D /* Build configuration list for PBXNativeTarget "nyrmar tvOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C3DAF2622E3BDB1B00C46474 /* Debug */,
-				C3DAF2632E3BDB1B00C46474 /* Release */,
+				C37774EB2E5498A60009D73D /* Debug */,
+				C37774EC2E5498A60009D73D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C3DAF2642E3BDB1B00C46474 /* Build configuration list for PBXNativeTarget "NyrmarUITests" */ = {
+		C37774EF2E5498A60009D73D /* Build configuration list for PBXNativeTarget "nyrmar macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C3DAF2652E3BDB1B00C46474 /* Debug */,
-				C3DAF2662E3BDB1B00C46474 /* Release */,
+				C37774F02E5498A60009D73D /* Debug */,
+				C37774F12E5498A60009D73D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = C3DAF2292E3BDB1A00C46474 /* Project object */;
+	rootObject = C37774A02E5498A30009D73D /* Project object */;
 }
