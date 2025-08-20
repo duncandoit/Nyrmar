@@ -30,4 +30,10 @@ final class MoveStateComponent: Component
     var isGrounded: Bool = false
     var groundNormal: CGVector = .init(dx: 0, dy: 1)
     var airControl: CGFloat = 0.5        // 0 = no control in air, 1 = full control
+    
+    /// Clamp for any acceleration produced.
+    var maxLinearAcceleration: CGFloat = 4000.0
+    
+    /// Designer defined velocity cap.
+    var maxVelocity: CGFloat? = nil
 }

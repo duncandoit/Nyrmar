@@ -8,7 +8,6 @@
 import Cocoa
 import MetalKit
 
-// Our macOS specific view controller
 class GameViewController: NSViewController
 {
     private let m_MetalLayer = CAMetalLayer()
@@ -19,8 +18,6 @@ class GameViewController: NSViewController
         super.viewDidLoad()
         
         m_Engine = EngineLoop(view: view)
-            
-        m_MetalLayer.isGeometryFlipped = true
 
         m_MetalLayer.pixelFormat = MTLPixelFormat.bgra8Unorm
         m_MetalLayer.contentsScale = NSScreen.main!.backingScaleFactor   // view.window is nil here
@@ -30,16 +27,43 @@ class GameViewController: NSViewController
         // Ensure the viewport entity (singleton surface + camera)
         m_Engine.admin().initializeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
         
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            if self.onKeyDown(with: $0)
+        NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+            guard let self = self else
             {
+                return event
+            }
+            
+            if event.isARepeat
+            {
+                // Let event pass through
                 return nil
             }
-            else
+            
+            if self.handleKey(event)
             {
-                return $0
+                // Consume event
+                return nil
             }
+            
+            return event
         }
+        
+        let bindingsComp = m_Engine.admin().playerBindingsComponent()
+        bindingsComp.pointer.append(contentsOf: [
+            PointerMapping(intent: .moveToLocation, phases: [.down])
+        ])
+        bindingsComp.digital.append(contentsOf: [
+            DigitalMapping(intent: .jump, inputs: [.space], policy: .onDown),
+        ])
+        bindingsComp.digitalAxis2D.append(contentsOf: [
+            DigitalAxis2DMapping(
+                intent: .cameraMove,
+                left:   [.custom("a")],
+                right:  [.custom("d")],
+                down:   [.custom("s")],
+                up:     [.custom("w")],
+            )
+        ])
     }
     
     override func viewDidLayout()
@@ -73,42 +97,40 @@ class GameViewController: NSViewController
         return true
     }
     
-    func onKeyDown(with event: NSEvent) -> Bool
+    @discardableResult
+    private func handleKey(_ event: NSEvent) -> Bool
     {
         let inputComp = m_Engine.admin().inputComponent()
+        let isDown = (event.type == .keyDown)
+        var input: GenericInput?
 
         if let specialKey = event.specialKey
         {
-            
             switch specialKey
             {
             case .leftArrow:
                 
-                inputComp.digitalEdges.append(
-                    DigitalEdge(input: .leftArrow, isDown: true, t: event.timestamp)
-                )
+                input = .leftArrow
                 
             case .rightArrow:
                 
-                inputComp.digitalEdges.append(
-                    DigitalEdge(input: .rightArrow, isDown: true, t: event.timestamp)
-                )
+                input = .rightArrow
                 
             case .upArrow:
                 
-                inputComp.digitalEdges.append(
-                    DigitalEdge(input: .upArrow, isDown: true, t: event.timestamp)
-                )
+                input = .upArrow
                 
             case .downArrow:
                 
-                inputComp.digitalEdges.append(
-                    DigitalEdge(input: .downArrow, isDown: true, t: event.timestamp)
-                )
+                input = .downArrow
                 
-            default:
-                
-                break
+            default: break
+            }
+            
+            if let input = input
+            {
+                inputComp.digitalEdges.append(DigitalEdge(input: input, isDown: isDown))
+                return true
             }
         }
         
@@ -116,16 +138,17 @@ class GameViewController: NSViewController
         {
             for key in keys
             {
-                inputComp.digitalEdges.append(
-                    DigitalEdge(input: .custom(String(key)), isDown: true, t: event.timestamp)
-                )
+                input = (key == " ") ? .space : .custom(key.lowercased())
+                inputComp.digitalEdges.append(DigitalEdge(input: input!, isDown: isDown))
             }
+            
+            return true
         }
         
-        return true
+        return false
     }
     
-    private func onMouseEvent(at screenSpacePoint: CGPoint, phase: PointerPhase)
+    private func handleMouseEvent(at screenSpacePoint: CGPoint, phase: PointerPhase)
     {
         let pointerData = PointerData(
             id:             1,
@@ -140,36 +163,36 @@ class GameViewController: NSViewController
     override func mouseDown(with event: NSEvent)
     {
         super.mouseDown(with: event)
-        onMouseEvent(at: event.locationInWindow, phase: .down)
+        handleMouseEvent(at: event.locationInWindow, phase: .down)
     }
     
     override func mouseUp(with event: NSEvent)
     {
         super.mouseUp(with: event)
-        onMouseEvent(at: event.locationInWindow, phase: .up)
+        handleMouseEvent(at: event.locationInWindow, phase: .up)
     }
     
     override func mouseDragged(with event: NSEvent)
     {
         super.mouseDragged(with: event)
-        onMouseEvent(at: event.locationInWindow, phase: .dragged)
+        handleMouseEvent(at: event.locationInWindow, phase: .dragged)
     }
     
     override func mouseMoved(with event: NSEvent)
     {
         super.mouseMoved(with: event)
-        onMouseEvent(at: event.locationInWindow, phase: .hover)
+        handleMouseEvent(at: event.locationInWindow, phase: .hover)
     }
     
     override func mouseExited(with event: NSEvent)
     {
         super.mouseExited(with: event)
-        onMouseEvent(at: event.locationInWindow, phase: .down)
+        handleMouseEvent(at: event.locationInWindow, phase: .down)
     }
     
     override func mouseEntered(with event: NSEvent)
     {
         super.mouseEntered(with: event)
-        onMouseEvent(at: event.locationInWindow, phase: .hover)
+        handleMouseEvent(at: event.locationInWindow, phase: .hover)
     }
 }

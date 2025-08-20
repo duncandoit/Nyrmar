@@ -5,11 +5,7 @@
 //  Created by Zachary Duncan on 8/2/25.
 //
 
-import CoreFoundation
 import Foundation
-
-import CoreGraphics
-import QuartzCore
 
 /// Maps raw inputs in `Single_InputComponent` to `PlayerCommand`s using data from `Single_PlayerBindingsComponent`.
 final class InputSystem: System
@@ -21,19 +17,37 @@ final class InputSystem: System
         let inputComp = component as! Single_InputComponent
         let bindingsComp = admin.playerBindingsComponent()
         let clockComp = admin.clockComponent()
-
         var commands = inputComp.commandQueue
+        
+        // First, emit onDown/onUp from edges AND update the held set.
+        if !inputComp.digitalEdges.isEmpty
+        {
+            for e in inputComp.digitalEdges
+            {
+                if e.isDown
+                {
+                    inputComp.heldDigitalEdges.insert(e.input)
+                }
+                else
+                {
+                    inputComp.heldDigitalEdges.remove(e.input)
+                }
+            }
+        }
 
-        processDigitalEdges(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
-        processPointerEvents(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
-        processAxis1D(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
-        processAxis2D(input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        // Map one-shot digital edges (onDown/onUp)
+        processDigitalEdges  (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
 
-        inputComp.commandQueue = commands
+        // Axis from held state (now up to date)
+        processPointerEvents (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processAxis1D        (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processAxis2DDigital (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processAxis2DAnalog  (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
 
-        // one-frame buffers are cleared after mapping
+        // Clear one-frame buffers
         inputComp.digitalEdges.removeAll(keepingCapacity: true)
         inputComp.pointerEvents.removeAll(keepingCapacity: true)
+        inputComp.commandQueue = commands
     }
 
     // MARK: - Digital
@@ -150,9 +164,61 @@ final class InputSystem: System
     }
 
     // MARK: - Axis 2D
-
+    
     @inline(__always)
-    private func processAxis2D(
+    private func processAxis2DDigital(
+        input: Single_InputComponent,
+        bindings: Single_PlayerBindingsComponent,
+        tickIndex: UInt64,
+        out: inout [PlayerCommand]
+    ){
+        guard !bindings.digitalAxis2D.isEmpty else
+        {
+            return
+        }
+
+        for m in bindings.digitalAxis2D
+        {
+            // synthesize samples in [-1, 1] from key states
+            func pressed(_ set: Set<GenericInput>) -> Bool
+            {
+                // any of the inputs qualifies
+                for key in set
+                {
+                    if input.heldDigitalEdges.contains(key)
+                    {
+                        return true
+                    }
+                }
+                return false
+            }
+            let xSample: Float = (pressed(m.right) ? 1 : 0) + (pressed(m.left) ? -1 : 0)
+            let ySample: Float = (pressed(m.up)    ? 1 : 0) + (pressed(m.down) ? -1 : 0)
+
+            // Resolve opposite keys: neutral if both (keeps behavior predictable)
+            let x = (xSample == 1 || xSample == -1) ? xSample : 0
+            let y = (ySample == 1 || ySample == -1) ? ySample : 0
+
+            let key = "D:\(m.left.hashValue)@\(m.right.hashValue)|\(m.down.hashValue)@\(m.up.hashValue)"
+            processAxis2DCore(
+                intent: m.intent,
+                x: x,
+                y: y,
+                deadZone: 0,
+                invertX: m.invertX,
+                invertY: m.invertY,
+                curve: m.curve,
+                reportEpsilon: m.reportEpsilon,
+                cacheKey: key,
+                input: input,
+                tickIndex: tickIndex,
+                out: &out
+            )
+        }
+    }
+    
+    @inline(__always)
+    private func processAxis2DAnalog(
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
         tickIndex: UInt64,
@@ -163,41 +229,76 @@ final class InputSystem: System
             return
         }
 
-        for mapping in bindings.axis2D
+        for m in bindings.axis2D
         {
-            var xSample = input.analog1D[mapping.x] ?? 0
-            var ySample = input.analog1D[mapping.y] ?? 0
+            let x = input.analog1D[m.x] ?? 0
+            let y = input.analog1D[m.y] ?? 0
+            let key = "A:\(m.x)|\(m.y)" // namespace to avoid clashing with digital cache
+            processAxis2DCore(
+                intent: m.intent,
+                x: x,
+                y: y,
+                deadZone: m.deadZone,
+                invertX: m.invertX,
+                invertY: m.invertY,
+                curve: m.curve,
+                reportEpsilon: m.reportEpsilon,
+                cacheKey: key,
+                input: input,
+                tickIndex: tickIndex,
+                out: &out
+            )
+        }
+    }
+    
+    @inline(__always)
+    private func processAxis2DCore(
+        intent: PlayerCommandIntent,
+        x: Float, y: Float,
+        deadZone: Float,
+        invertX: Bool, invertY: Bool,
+        curve: AxisCurve,
+        reportEpsilon: CGFloat,
+        cacheKey: String,
+        input: Single_InputComponent,
+        tickIndex: UInt64,
+        out: inout [PlayerCommand]
+    ){
+        var xs = invertX ? -x : x
+        var ys = invertY ? -y : y
+        
+        // clamp to unit circle -> diagonals not faster
+        let len = sqrt(xs*xs + ys*ys)
+        if len > 1
+        {
+            xs /= len; ys /= len
+        }
 
-            if mapping.invertX
-            {
-                xSample = -xSample
-            }
-            if mapping.invertY
-            {
-                ySample = -ySample
-            }
+        let xCurved = applyCurve(applyDeadZone(xs, deadZone: deadZone), curve: curve)
+        let yCurved = applyCurve(applyDeadZone(ys, deadZone: deadZone), curve: curve)
 
-            let xCurved = applyCurve(applyDeadZone(xSample, deadZone: mapping.deadZone), curve: mapping.curve)
-            let yCurved = applyCurve(applyDeadZone(ySample, deadZone: mapping.deadZone), curve: mapping.curve)
+        // circular DZ on magnitude
+        let mag = hypot(Double(xCurved), Double(yCurved))
+        let dz  = Double(deadZone)
 
-            // Circular dead zone based on magnitude
-            let magnitude = hypot(Double(xCurved), Double(yCurved))
-            let dead = Double(mapping.deadZone)
+        var pt = CGPoint.zero
+        if mag > dz
+        {
+            let scale = (mag - dz) / (1 - dz)
+            pt = CGPoint(x: Double(xCurved) * scale, y: Double(yCurved) * scale)
+        }
 
-            var outputPoint = CGPoint.zero
-            if magnitude > dead
-            {
-                let scale = (magnitude - dead) / (1 - dead)
-                outputPoint = CGPoint(x: Double(xCurved) * scale, y: Double(yCurved) * scale)
-            }
-
-            let key = pairKey(mapping.x, mapping.y)
-            let previous = input.lastReported2D[key]
-            if shouldReport2D(previous: previous, newValue: outputPoint, epsilon: mapping.reportEpsilon)
-            {
-                input.lastReported2D[key] = outputPoint
-                stamp(intent: mapping.intent, value: .axis2D(outputPoint), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
-            }
+        let previous = input.lastReported2D[cacheKey]
+        if shouldReport2D(previous: previous, newValue: pt, epsilon: reportEpsilon)
+        {
+            input.lastReported2D[cacheKey] = pt
+            stamp(
+                intent: intent,
+                value: .axis2D(pt),
+                controllerID: input.controllerID,
+                tickIndex: tickIndex,
+                out: &out
+            )
         }
     }
 
@@ -288,7 +389,7 @@ final class InputSystem: System
     {
         guard let prev = previous else
         {
-            return true
+            return newValue.x >= epsilon || newValue.y >= epsilon
         }
         return hypot(newValue.x - prev.x, newValue.y - prev.y) >= epsilon
     }

@@ -10,14 +10,11 @@ import QuartzCore
 
 final class EngineLoop
 {
-    static let shared = EngineLoop()
-    
     private let m_Admin = EntityAdmin()
     private var m_DisplayLink: CADisplayLink?
     private var m_LastTime: CFTimeInterval = 0
+    
     private(set) var isRunning = false
-
-    private init() {}
     
     func admin() -> EntityAdmin
     {

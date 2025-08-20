@@ -29,53 +29,39 @@ final class MovementStateSystem: System
         transformComp.prevRotation = transformComp.rotation
         transformComp.prevScale    = transformComp.scale
 
-        var targetPosition = transformComp.position
+        var position = transformComp.position
         stateComp.lastAppliedDelta = .zero
-
-        // One-shot: teleport
-        if let position = exertionComp.teleportTo
-        {
-            targetPosition = position
-            stateComp.velocity     = .zero
-            stateComp.acceleration = .zero
-            stateComp.isSeeking    = false
-            stateComp.currentSeekTarget = nil
-            stateComp.remainingDistance = 0
-            exertionComp.teleportTo = nil
-        }
-
-        // One-shot: absolute world delta
-        if let deltaPosition = exertionComp.deltaWorld
-        {
-            targetPosition.x += deltaPosition.dx
-            targetPosition.y += deltaPosition.dy
-            stateComp.lastAppliedDelta += deltaPosition
-            exertionComp.deltaWorld = nil
-        }
-
+        
         // Velocity integration (semi-implicit Euler was done in PhysicsSystem for v
         // here we integrate x using the current velocity)
         if deltaTime > 0, stateComp.velocity.lengthSquared > 0
         {
             let deltaVelocity = stateComp.velocity * deltaTime
-            targetPosition.x += deltaVelocity.dx
-            targetPosition.y += deltaVelocity.dy
+            position.x += deltaVelocity.dx
+            position.y += deltaVelocity.dy
             stateComp.lastAppliedDelta += deltaVelocity
         }
 
-        // Seek arrival snap (and crossing protection)
-        if let target = exertionComp.seekTarget
+        switch exertionComp.intent
         {
-            let prevTo = CGVector(
+            
+        case .seekTarget:
+            
+            guard let target = exertionComp.target else
+            {
+                break
+            }
+            
+            let lastVector = CGVector(
                 dx: target.x - transformComp.position.x,
                 dy: target.y - transformComp.position.y
             )
             
-            let nowTo   = CGVector(dx: target.x - targetPosition.x, dy: target.y - targetPosition.y)
-            let crossed = (prevTo.dx * nowTo.dx + prevTo.dy * nowTo.dy) <= 0
+            let currentVector   = CGVector(dx: target.x - position.x, dy: target.y - position.y)
+            let crossed = (lastVector.dx * currentVector.dx + lastVector.dy * currentVector.dy) <= 0
 
-            let dx = target.x - targetPosition.x
-            let dy = target.y - targetPosition.y
+            let dx = target.x - position.x
+            let dy = target.y - position.y
             let distance = sqrt(dx*dx + dy*dy)
             stateComp.remainingDistance = distance
 
@@ -86,28 +72,52 @@ final class MovementStateSystem: System
 
             if crossed || distance <= arriveEpsilon
             {
-                targetPosition = target
-                exertionComp.seekTarget = nil
-                stateComp.isSeeking = false
-                stateComp.currentSeekTarget = nil
-                stateComp.velocity = .zero      // stop precisely at target
-                stateComp.acceleration = .zero
+                position = target
+                settleMoveState(stateComp, andExertion: exertionComp)
             }
             else
             {
                 stateComp.isSeeking = true
                 stateComp.currentSeekTarget = target
             }
-        }
-        else
-        {
+            
+        case .teleportTo:
+            
+            guard let target = exertionComp.target else
+            {
+                break
+            }
+            
+            position = target
+            settleMoveState(stateComp, andExertion: exertionComp)
+            
+        default:
+            
+            // .moveInDirection, etc
             stateComp.isSeeking = false
             stateComp.currentSeekTarget = nil
-            stateComp.remainingDistance = 0
         }
 
-        // Commit & settle
-        transformComp.position = targetPosition
-        stateComp.isSettled = stateComp.velocity.length < stateComp.settledEpsilon && exertionComp.seekTarget == nil
+        // Clamp speed by stat based caps
+        if let maxVelocity = stateComp.sibling(BaseStatsComponent.self)?.moveSpeedMax, maxVelocity > 0
+        {
+            stateComp.velocity = stateComp.velocity.clampedMagnitude(maxVelocity)
+        }
+
+        // Commit
+        transformComp.position = position
+        stateComp.isSettled = stateComp.isSettled && stateComp.velocity.length < stateComp.settledEpsilon && exertionComp.intent == .none
+    }
+    
+    @inline(__always)
+    private func settleMoveState(_ stateComp: MoveStateComponent, andExertion exertionComp: MoveExertionComponent? = nil)
+    {
+        stateComp.velocity = .zero
+        stateComp.acceleration = .zero
+        stateComp.isSeeking = false
+        stateComp.currentSeekTarget = nil
+        stateComp.remainingDistance = 0
+        exertionComp?.target = nil
+        exertionComp?.intent = .none
     }
 }

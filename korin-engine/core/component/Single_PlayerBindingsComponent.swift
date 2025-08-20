@@ -18,4 +18,5 @@ final class Single_PlayerBindingsComponent: Component
     var axis1D:  [Axis1DMapping]  = []
     var axis2D:  [Axis2DMapping]  = []
     var pointer: [PointerMapping] = []
+    var digitalAxis2D: [DigitalAxis2DMapping] = []
 }

@@ -60,7 +60,6 @@ struct DigitalEdge
 {
     let input: GenericInput
     let isDown: Bool
-    let t: TimeInterval
 }
 
 enum PlayerCommandIntent: String, Codable
@@ -167,6 +166,36 @@ struct Axis2DMapping: Codable, Hashable
     }
 }
 
+struct DigitalAxis2DMapping: Codable, Hashable
+{
+    let intent: PlayerCommandIntent
+    let left: Set<GenericInput>
+    let right: Set<GenericInput>
+    let down: Set<GenericInput>
+    let up: Set<GenericInput>
+    let invertX: Bool
+    let invertY: Bool
+    let curve: AxisCurve
+    let reportEpsilon: CGFloat
+
+    init(intent: PlayerCommandIntent,
+         left: Set<GenericInput>,
+         right: Set<GenericInput>,
+         down: Set<GenericInput>,
+         up: Set<GenericInput>,
+         invertX: Bool = false,
+         invertY: Bool = false,
+         curve: AxisCurve = .linear,
+         reportEpsilon: CGFloat = 0.8
+    ){
+        self.intent = intent
+        self.left = left; self.right = right
+        self.down = down; self.up = up
+        self.invertX = invertX; self.invertY = invertY
+        self.curve = curve; self.reportEpsilon = reportEpsilon
+    }
+}
+
 struct PointerMapping: Codable, Hashable
 {
     let intent: PlayerCommandIntent
@@ -189,6 +218,8 @@ final class Single_InputComponent: Component
     // Latest analog samples (overwritten by OS; NOT cleared per frame)
     var analog1D: [GenericInput: Float] = [:]
     var analog2DAxes: [(x: GenericInput, y: GenericInput)] = [] // config, not state
+    
+    var heldDigitalEdges: Set<GenericInput> = []   // persistent across frames
 
     // Minimal persistence to throttle analog spam
     var lastReported1D: [GenericInput: Float] = [:]

@@ -8,7 +8,6 @@
 import UIKit
 import MetalKit
 
-// Our tvOS specific view controller
 class GameViewController: UIViewController
 {
     private let metalLayer = CAMetalLayer()

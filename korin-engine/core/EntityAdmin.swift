@@ -81,14 +81,14 @@ class EntityAdmin
                 // AI movement
             CommandSystem(),
                 // Unsynchronized movement
-                // Movement state
             MovementExertionSystem(),
-            MovementStateSystem(),
+                
                 // AI perception
                 // PlatformerPlayerController
                 // WallCrawler
                 // RaycastMovement
             PhysicsSystem(),
+            MovementStateSystem(),
                 // Grounded
                 // Health
                 // Socket
@@ -119,7 +119,19 @@ class EntityAdmin
         let cameraComp = Single_Camera2DComponent()
         cameraComp.pixelsPerUnit = pixelsPerUnit
         
-        m_ViewportEntity = addEntity(with: surfaceComp, cameraComp)!
+        let transformComp = TransformComponent()
+        let moveStateComp = MoveStateComponent()
+        moveStateComp.airControl = 1.0
+        
+        let physicsComp = PhysicsStateComponent()
+        physicsComp.mass           = 1.0
+        physicsComp.gravityScale   = 1.0
+        physicsComp.linearDrag     = 10.0
+        physicsComp.linearDamping  = 0.0
+        physicsComp.airDrag        = 0.0
+        physicsComp.groundFriction = 0.0
+        
+        m_ViewportEntity = addEntity(with: surfaceComp, cameraComp, transformComp, moveStateComp, physicsComp)!
         m_MetalSurfaceComponent = surfaceComp
         m_Camera2DComponent = cameraComp
         
@@ -186,33 +198,33 @@ class EntityAdmin
         let collisionComp = CollisionComponent(shape: .aabb(worldSize))
         let thrallComp = ThrallComponent(controllerID: inputComponent().controllerID)
         let physicsComp = PhysicsStateComponent()
-        physicsComp.mass = 1.0
-        physicsComp.gravityScale = 0.0
-        physicsComp.maxSpeed = nil
-        physicsComp.linearDrag = 0.0
-        physicsComp.linearDamping = 0.0
-        physicsComp.airDrag = 0.0
+        physicsComp.mass           = 1.0
+        physicsComp.gravityScale   = 1.0
+        physicsComp.linearDrag     = 10.0
+        physicsComp.linearDamping  = 0.0
+        physicsComp.airDrag        = 0.0
         physicsComp.groundFriction = 0.0
         
         let forceComp = PhysicsTermComponent()
-        //forceComp.terms = [
-        //    // Low Gravity
-        //    .init(
-        //        quantity: .acceleration(CGVector(dx: 0, dy: 200)),
-        //        space: .world,
-        //        decay: .infinite,
-        //        remaining: .infinity,
-        //        enabled: true
-        //    )
-        //]
+//        forceComp.terms = [
+//            // Low Gravity
+//            .init(
+//                quantity: .acceleration(CGVector(dx: 0, dy: 20)),
+//                space: .world,
+//                decay: .infinite,
+//                remaining: .infinity,
+//                enabled: true
+//            )
+//        ]
         
         let moveStateComp = MoveStateComponent()
         moveStateComp.airControl = 1.0
         
+        let exertionComp = MoveExertionComponent()
         let baseStatsComp = BaseStatsComponent()
-        baseStatsComp.moveSpeedMax = 100
+        baseStatsComp.moveSpeedMax = 10
 
-        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, baseStatsComp)
+        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, exertionComp, baseStatsComp)
         m_TestSpriteEntity = entity
     }
     
@@ -265,14 +277,6 @@ class EntityAdmin
         }
         
         let bindingsComp = Single_PlayerBindingsComponent()
-        bindingsComp.pointer.append(contentsOf: [
-            PointerMapping(intent: .jump, phases: [.up]),
-            PointerMapping(intent: .moveToLocation, phases: [.down, .dragged])
-        ])
-        bindingsComp.digital.append(contentsOf: [
-            DigitalMapping(intent: .cameraMove, inputs: [.custom("w"), .upArrow], policy: .onDown)
-        ])
-        
         let entity = addEntity(with: bindingsComp)!
         m_PlayerBindingsEntity = entity
         m_PlayerBindingsComponent = bindingsComp

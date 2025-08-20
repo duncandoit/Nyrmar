@@ -21,15 +21,15 @@ final class PhysicsStateComponent: Component
     /// <= 0 => kinematic/immovable
     var mass: CGFloat = 1.0
     
-    /// Optional hard speed cap (world units / s).
-    var maxSpeed: CGFloat? = nil
+    /// Hard speed cap (world units / s).
+    let maxVelocity: CGFloat = 5000.0
     
 // MARK: Damping & drag
     
     /// Exponential velocity damping (frame-rate independent). [0-1] per second.
     var linearDamping: CGFloat = 0.0
 
-    // viscous drag coefficient (a_drag = -(c/m)*v)
+    /// viscous drag coefficient (a_drag = -(c/m)*v)
     var linearDrag: CGFloat = 0.0
     
     /// Linear air drag (extra damping) applied always. [0-1] per second.

@@ -10,7 +10,8 @@ import MetalKit
 
 class GameViewController: UIViewController
 {
-    private let metalLayer = CAMetalLayer()
+    private let m_Engine = EngineLoop()
+    private let m_MetalLayer = CAMetalLayer()
 
     override func viewDidLoad()
     {
@@ -18,34 +19,43 @@ class GameViewController: UIViewController
 
         view.layer.isGeometryFlipped = true
 
-        metalLayer.pixelFormat = .bgra8Unorm
-        metalLayer.contentsScale = UIScreen.main.scale   // view.window is nil here
-        metalLayer.frame = view.layer.bounds
-        view.layer.addSublayer(metalLayer)
+        m_MetalLayer.pixelFormat = .bgra8Unorm
+        m_MetalLayer.contentsScale = UIScreen.main.scale   // view.window is nil here
+        m_MetalLayer.frame = view.layer.bounds
+        view.layer.addSublayer(m_MetalLayer)
 
         // Ensure the viewport entity (singleton surface + camera)
-        EngineLoop.shared.admin().initializeMetalViewport(layer: metalLayer, pixelsPerUnit: 100)
+        m_Engine.admin().initializeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
+        
+        let bindingsComp = m_Engine.admin().playerBindingsComponent()
+        bindingsComp.pointer.append(contentsOf: [
+            PointerMapping(intent: .moveToLocation, phases: [.up]),
+            //PointerMapping(intent: .jump, phases: [.down]),
+            PointerMapping(intent: .cameraMove, phases: [.dragged])
+        ])
     }
 
     override func viewDidLayoutSubviews()
     {
         super.viewDidLayoutSubviews()
-        metalLayer.frame = view.layer.bounds
-        metalLayer.contentsScale = UIScreen.main.scale
-        metalLayer.drawableSize = CGSize(width: metalLayer.bounds.width * metalLayer.contentsScale,
-                                         height: metalLayer.bounds.height * metalLayer.contentsScale)
+        m_MetalLayer.frame = view.layer.bounds
+        m_MetalLayer.contentsScale = UIScreen.main.scale
+        m_MetalLayer.drawableSize = CGSize(
+            width: m_MetalLayer.bounds.width * m_MetalLayer.contentsScale,
+            height: m_MetalLayer.bounds.height * m_MetalLayer.contentsScale
+        )
     }
 
     override func viewDidAppear(_ animated: Bool)
     {
         super.viewDidAppear(animated)
-        EngineLoop.shared.start()
+        m_Engine.start()
     }
 
     override func viewWillDisappear(_ animated: Bool)
     {
         super.viewWillDisappear(animated)
-        EngineLoop.shared.stop()
+        m_Engine.stop()
     }
     
     func touch(at screenSpacePoint: CGPoint, phase: PointerPhase)
@@ -54,10 +64,10 @@ class GameViewController: UIViewController
             id:             1,
             type:           .touch,
             phase:          phase,
-            screenLocation:  screenSpacePoint
+            screenLocation: screenSpacePoint
         )
         
-        EngineLoop.shared.admin().inputComponent().pointerEvents.append(pointerData)
+        m_Engine.admin().inputComponent().pointerEvents.append(pointerData)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
