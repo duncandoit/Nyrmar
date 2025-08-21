@@ -254,9 +254,11 @@ final class InputSystem: System
     @inline(__always)
     private func processAxis2DCore(
         intent: PlayerCommandIntent,
-        x: Float, y: Float,
+        x: Float,
+        y: Float,
         deadZone: Float,
-        invertX: Bool, invertY: Bool,
+        invertX: Bool,
+        invertY: Bool,
         curve: AxisCurve,
         reportEpsilon: CGFloat,
         cacheKey: String,

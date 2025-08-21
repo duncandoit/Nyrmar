@@ -30,8 +30,7 @@ final class RenderSystem: System
     {
         let surfaceComp = component as! Single_MetalSurfaceComponent
         let clockComp = admin.clockComponent()
-        let cameraComp = admin.camera2DComponent()
-        guard let cameraTransformComp = cameraComp.sibling(TransformComponent.self) else
+        guard let cameraTransformComp = surfaceComp.sibling(TransformComponent.self) else
         {
             return
         }
@@ -78,7 +77,7 @@ final class RenderSystem: System
         
         // camera
         let interpolationAlpha = clockComp.interpolationAlpha
-        let pixelsPerUnit = Float(cameraComp.pixelsPerUnit)
+        let pixelsPerUnit = Float(surfaceComp.pixelsPerUnit)
         let cameraCenterWorld = simd_float2(Float(cameraTransformComp.position.x), Float(cameraTransformComp.position.y))
         let worldHalfExtents = simd_float2(viewportPixelSize.x/pixelsPerUnit/2, viewportPixelSize.y/pixelsPerUnit/2)
         let invWorldHalfExtents = SIMD2<Float>(1.0 / worldHalfExtents.x, 1.0 / worldHalfExtents.y)
@@ -211,70 +210,87 @@ final class RenderSystem: System
         commandBuffer.commit()
     }
     
-    static func screenToWorld(_ p: CGPoint, admin: EntityAdmin) -> CGPoint?
+    static func screenToWorld(_ screenSpacePoint: CGPoint, admin: EntityAdmin) -> CGPoint?
     {
-        let surf = admin.metalSurfaceComponent()
-        guard let layer = surf.layer else
+        let surfaceComp = admin.metalSurfaceComponent()
+        guard let layer = surfaceComp.layer else
         {
             return nil
         }
-        let cam  = admin.camera2DComponent()
-
-        let vw = layer.bounds.width,  vh = layer.bounds.height
-        guard vw > 0 && vh > 0 else
+        guard let transformComp  = surfaceComp.sibling(TransformComponent.self)?.position else
         {
             return nil
         }
 
-        let xn = p.x / vw
-        
-#if os(macOS)
-        
-        let yn = p.y / vh
-        
-#else // all other apple os
-        
-        let yn = 1.0 - p.y / vh
-        
-#endif // all other apple os
+        // View points to pixels
+        let layerScale  = CGFloat(layer.contentsScale)
+        let pixelX = screenSpacePoint.x * layerScale
+        let pixelY = screenSpacePoint.y * layerScale
 
-        let ndcX = xn * 2 - 1
-        let ndcY = yn * 2 - 1
+        // Normalize in pixels
+        // use drawableSize so it matches what with render
+        let drawableWidth = CGFloat(layer.drawableSize.width)
+        let drawableHeight = CGFloat(layer.drawableSize.height)
+        guard drawableWidth > 0, drawableHeight > 0 else
+        {
+            return nil
+        }
 
-        let ppu   = CGFloat(cam.pixelsPerUnit)
-        let halfW = (layer.drawableSize.width  / ppu) * 0.5
-        let halfH = (layer.drawableSize.height / ppu) * 0.5
+        let normalizedX = (pixelX / drawableWidth) * 2.0 - 1.0
+        
+    #if os(macOS)
+        
+        // AppKit is y-up in view space
+        let normalizedY = (pixelY / drawableHeight) * 2.0 - 1.0
+        
+    #else
+        
+        // UIKit is y-down. flip to NDC y-up
+        let normalizedY = (1.0 - (pixelY / drawableHeight)) * 2.0 - 1.0
+        
+    #endif
+
+        // NDC to world (RenderSystem flips Y in toNDC, so invert here)
+        let pixelsPerUnit = CGFloat(surfaceComp.pixelsPerUnit)
+        let worldHalfWidth  = drawableWidth / (2.0 * pixelsPerUnit)
+        let worldHalfHeight  = drawableHeight / (2.0 * pixelsPerUnit)
 
         return CGPoint(
-            x: cam.center.x + ndcX * halfW,
-            y: cam.center.y + ndcY * halfH
+            x: transformComp.x + normalizedX * worldHalfWidth,
+            y: transformComp.y + normalizedY * worldHalfHeight
         )
     }
 
     static func worldToScreen(_ p: CGPoint, admin: EntityAdmin) -> CGPoint?
     {
-        let surf = admin.metalSurfaceComponent()
-        guard let layer = surf.layer else
+        let surfaceComp = admin.metalSurfaceComponent()
+        guard let layer = surfaceComp.layer else
         {
             return nil
         }
-        let cam  = admin.camera2DComponent()
+        guard let transformComp = surfaceComp.sibling(TransformComponent.self) else
+        {
+            return nil
+        }
 
-        let ppu   = CGFloat(cam.pixelsPerUnit)
+        let ppu   = CGFloat(surfaceComp.pixelsPerUnit)
         let halfW = (layer.drawableSize.width  / ppu) * 0.5
         let halfH = (layer.drawableSize.height / ppu) * 0.5
 
-        let cx = (p.x - cam.center.x) / halfW
-        let cy = (p.y - cam.center.y) / halfH
+        let cx = (p.x - transformComp.position.x) / halfW
+        let cy = (p.y - transformComp.position.y) / halfH
 
-        var xn = (cx + 1) * 0.5
-        var yn = (cy + 1) * 0.5
+        let xn = (cx + 1) * 0.5
         
-#if os(iOS) || os(tvOS) // all other apple os
+    #if os(macOS)
         
-        yn = 1 - yn
+        let yn = (cy + 1) * 0.5
         
-#endif // all other apple os
+    #else// all other os
+        
+        let yn = 1 - yn
+        
+    #endif // all other os
 
         return CGPoint(
             x: xn * layer.bounds.width,
@@ -286,7 +302,7 @@ final class RenderSystem: System
     private func toNDC(_ p: simd_float2, invHalf: simd_float2) -> simd_float2
     {
         let n = p * invHalf
-        return n
+        return simd_float2(n.x, n.y)
     }
     
     @inline(__always)

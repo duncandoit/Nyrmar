@@ -18,7 +18,8 @@ class GameViewController: NSViewController
         super.viewDidLoad()
         
         m_Engine = EngineLoop(view: view)
-
+        
+        m_MetalLayer.isGeometryFlipped = false
         m_MetalLayer.pixelFormat = MTLPixelFormat.bgra8Unorm
         m_MetalLayer.contentsScale = NSScreen.main!.backingScaleFactor   // view.window is nil here
         m_MetalLayer.frame = view.layer!.bounds
@@ -150,11 +151,12 @@ class GameViewController: NSViewController
     
     private func handleMouseEvent(at screenSpacePoint: CGPoint, phase: PointerPhase)
     {
+        let viewSpacePoint = view.convert(screenSpacePoint, from: nil)
         let pointerData = PointerData(
             id:             1,
             type:           .touch,
             phase:          phase,
-            screenLocation: screenSpacePoint
+            screenLocation: viewSpacePoint
         )
         
         m_Engine.admin().inputComponent().pointerEvents.append(pointerData)

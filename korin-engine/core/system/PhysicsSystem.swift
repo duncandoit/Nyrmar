@@ -34,7 +34,6 @@ final class PhysicsSystem: System
         
         if let physicsTermComp = physicsComp.sibling(PhysicsTermComponent.self)
         {
-            
             var keptTerms: [PhysicsTermComponent.Term] = []
             
             // Kinematic / immovable: consume impulses; decay terms magnitudes; no kinematics

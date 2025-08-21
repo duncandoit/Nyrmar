@@ -9,7 +9,7 @@ import Foundation
 
 class Single_GameSettingsComponent: Component
 {
-    static let typeID = componentTypeID(for: Single_Camera2DComponent.self)
+    static let typeID = componentTypeID(for: Single_GameSettingsComponent.self)
     var siblings: SiblingContainer?
     
     /// Target FPS. 

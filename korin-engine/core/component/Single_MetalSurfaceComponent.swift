@@ -24,6 +24,7 @@ final class Single_MetalSurfaceComponent: Component
     
     var pixelFormat: MTLPixelFormat = .bgra8Unorm
     var clearColor = MTLClearColor(red: 0.10, green: 0.10, blue: 0.11, alpha: 1.0)
+    var pixelsPerUnit: CGFloat = 100
     
     init(layer: CAMetalLayer?)
     {

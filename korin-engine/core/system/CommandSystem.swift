@@ -54,34 +54,6 @@ final class CommandSystem: System
                     admin.addSibling(physicsComp!, to: thrallComp)
                 }
                 
-//                // No viewport yet. Ignore this tick.
-//                guard let layer = admin.metalSurfaceComponent().layer else
-//                {
-//                    break
-//                }
-                let cameraComp = admin.camera2DComponent()
-//
-//                // Normalized device coords from View points
-//                let viewportSize = layer.bounds.size
-//                guard viewportSize.width > 0, viewportSize.height > 0 else
-//                {
-//                    break
-//                }
-//
-//                let ndcX = (screenSpacePoint.x / viewportSize.width)  * 2.0 - 1.0
-//                let ndcY = 1.0 - (screenSpacePoint.y / viewportSize.height) * 2.0
-//                
-//                // Normalized device coordinates -> world coordinates
-//                // using half-extents derived from PPU and pixel viewport
-//                let contentScale  = layer.contentsScale
-//                let pixelWidth = layer.bounds.width  * contentScale
-//                let pixelHeight = layer.bounds.height * contentScale
-//                let pixelsPerUnit = CGFloat(cameraComp.pixelsPerUnit)
-//                let halfWorldX = pixelWidth / (2.0 * pixelsPerUnit)
-//                let halfWorldY = pixelHeight / (2.0 * pixelsPerUnit)
-//
-//                let worldX = cameraComp.center.x + ndcX * halfWorldX
-//                let worldY = cameraComp.center.y + ndcY * halfWorldY
                 let worldSpacePoint = RenderSystem.screenToWorld(screenSpacePoint, admin: admin)
 
                 var exertionComp: MoveExertionComponent! = thrallComp.sibling(MoveExertionComponent.self)
@@ -92,7 +64,7 @@ final class CommandSystem: System
                 }
                 
                 // Hysteresis: at least one world pixel
-                let ppu = CGFloat(cameraComp.pixelsPerUnit)
+                let ppu = CGFloat(admin.metalSurfaceComponent().pixelsPerUnit)
                 exertionComp.intent          = .seekTarget
                 exertionComp.target          = worldSpacePoint
                 exertionComp.dampening       = 0.0   // No velocity dampening
@@ -101,7 +73,7 @@ final class CommandSystem: System
                 
             case (.cameraMove, .axis2D(let movementVector)):
                 
-                let cameraComp = admin.camera2DComponent()
+                let cameraComp = admin.metalSurfaceComponent()
                 var physicsComp: PhysicsStateComponent! = cameraComp.sibling(PhysicsStateComponent.self)
                 if physicsComp == nil
                 {

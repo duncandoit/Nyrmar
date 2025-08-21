@@ -31,7 +31,6 @@ class EntityAdmin
     // Rendering
     private var m_ViewportEntity: Entity?
     private weak var m_MetalSurfaceComponent: Single_MetalSurfaceComponent?
-    private weak var m_Camera2DComponent: Single_Camera2DComponent?
     
     // Asset Management
     private weak var m_MetalTextureCacheComponent: Single_MetalTextureCacheComponent?
@@ -116,8 +115,7 @@ class EntityAdmin
         }
         
         let surfaceComp = Single_MetalSurfaceComponent(layer: layer)
-        let cameraComp = Single_Camera2DComponent()
-        cameraComp.pixelsPerUnit = pixelsPerUnit
+        surfaceComp.pixelsPerUnit = pixelsPerUnit
         
         let transformComp = TransformComponent()
         let moveStateComp = MoveStateComponent()
@@ -131,9 +129,8 @@ class EntityAdmin
         physicsComp.airDrag        = 0.0
         physicsComp.groundFriction = 0.0
         
-        m_ViewportEntity = addEntity(with: surfaceComp, cameraComp, transformComp, moveStateComp, physicsComp)!
+        m_ViewportEntity = addEntity(with: surfaceComp, transformComp, moveStateComp, physicsComp)!
         m_MetalSurfaceComponent = surfaceComp
-        m_Camera2DComponent = cameraComp
         
         print("[" + #fileID + "]: " + #function + " -> Registered Metal Viewport")
     }
@@ -206,16 +203,16 @@ class EntityAdmin
         physicsComp.groundFriction = 0.0
         
         let forceComp = PhysicsTermComponent()
-//        forceComp.terms = [
-//            // Low Gravity
-//            .init(
-//                quantity: .acceleration(CGVector(dx: 0, dy: 20)),
-//                space: .world,
-//                decay: .infinite,
-//                remaining: .infinity,
-//                enabled: true
-//            )
-//        ]
+        forceComp.terms = [
+            // Low Gravity
+            .init(
+                quantity: .acceleration(CGVector(dx: 0, dy: -20)),
+                space: .world,
+                decay: .infinite,
+                remaining: .infinity,
+                enabled: true
+            )
+        ]
         
         let moveStateComp = MoveStateComponent()
         moveStateComp.airControl = 1.0
@@ -233,11 +230,6 @@ class EntityAdmin
     func metalSurfaceComponent() -> Single_MetalSurfaceComponent
     {
         return m_MetalSurfaceComponent!
-    }
-    
-    func camera2DComponent() -> Single_Camera2DComponent
-    {
-        return m_Camera2DComponent!
     }
     
     func metalTextureCacheComponent() -> Single_MetalTextureCacheComponent?
