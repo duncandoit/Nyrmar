@@ -252,6 +252,11 @@ final class RenderSystem: System
 
         // NDC to world (RenderSystem flips Y in toNDC, so invert here)
         let pixelsPerUnit = CGFloat(surfaceComp.pixelsPerUnit)
+        guard pixelsPerUnit > 0 else
+        {
+            return nil
+        }
+        
         let worldHalfWidth  = drawableWidth / (2.0 * pixelsPerUnit)
         let worldHalfHeight  = drawableHeight / (2.0 * pixelsPerUnit)
 
@@ -261,41 +266,65 @@ final class RenderSystem: System
         )
     }
 
-    static func worldToScreen(_ p: CGPoint, admin: EntityAdmin) -> CGPoint?
+    static func worldToScreen(_ worldPoint: CGPoint, admin: EntityAdmin) -> CGPoint?
     {
         let surfaceComp = admin.metalSurfaceComponent()
         guard let layer = surfaceComp.layer else
         {
             return nil
         }
-        guard let transformComp = surfaceComp.sibling(TransformComponent.self) else
+        guard let cameraPosition = surfaceComp.sibling(TransformComponent.self)?.position else
+        {
+            return nil
+        }
+        
+        let layerScale = CGFloat(layer.contentsScale)
+
+        // View points to pixels
+        let drawableWidth  = CGFloat(layer.drawableSize.width)
+        let drawableHeight = CGFloat(layer.drawableSize.height)
+        guard drawableWidth > 0, drawableHeight > 0 else
         {
             return nil
         }
 
-        let ppu   = CGFloat(surfaceComp.pixelsPerUnit)
-        let halfW = (layer.drawableSize.width  / ppu) * 0.5
-        let halfH = (layer.drawableSize.height / ppu) * 0.5
+        // World half-extents visible at current PPU
+        let pixelsPerUnit = CGFloat(surfaceComp.pixelsPerUnit)
+        guard pixelsPerUnit > 0 else
+        {
+            return nil
+        }
+        
+        let worldHalfWidth  = drawableWidth  / (2.0 * pixelsPerUnit)
+        let worldHalfHeight = drawableHeight / (2.0 * pixelsPerUnit)
 
-        let cx = (p.x - transformComp.position.x) / halfW
-        let cy = (p.y - transformComp.position.y) / halfH
+        // World to screen space
+        let screenSpaceX = worldPoint.x - cameraPosition.x
+        let screenSpaceY = worldPoint.y - cameraPosition.y
 
-        let xn = (cx + 1) * 0.5
+        // Screen to NDC [−1, 1], no Y flip here
+        let ndcX = screenSpaceX / worldHalfWidth
+        let ndcY = screenSpaceY / worldHalfHeight
+
+        // NDC to normalized view [0, 1]
+        let normalizedX = (ndcX + 1.0) * 0.5
         
     #if os(macOS)
         
-        let yn = (cy + 1) * 0.5
+        // AppKit view coords are y-up
+        let normalizedY = (ndcY + 1.0) * 0.5
         
-    #else// all other os
+    #else
         
-        let yn = 1 - yn
+        // UIKit view coords are y-down
+        let normalizedY = 1.0 - (ndcY + 1.0) * 0.5
         
-    #endif // all other os
+    #endif
 
-        return CGPoint(
-            x: xn * layer.bounds.width,
-            y: yn * layer.bounds.height
-        )
+        // Normalized to view points
+        let viewX = normalizedX * drawableWidth  / layerScale
+        let viewY = normalizedY * drawableHeight / layerScale
+        return CGPoint(x: viewX, y: viewY)
     }
     
     @inline(__always)

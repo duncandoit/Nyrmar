@@ -17,8 +17,7 @@ class GameViewController: UIViewController
     {
         super.viewDidLoad()
 
-        view.layer.isGeometryFlipped = true
-
+        m_MetalLayer.isGeometryFlipped = false
         m_MetalLayer.pixelFormat = .bgra8Unorm
         m_MetalLayer.contentsScale = UIScreen.main.scale   // view.window is nil here
         m_MetalLayer.frame = view.layer.bounds
@@ -60,11 +59,12 @@ class GameViewController: UIViewController
     
     func touch(at screenSpacePoint: CGPoint, phase: PointerPhase)
     {
+        let viewSpacePoint = view.convert(screenSpacePoint, from: nil)
         let pointerData = PointerData(
             id:             1,
             type:           .touch,
             phase:          phase,
-            screenLocation: screenSpacePoint
+            screenLocation: viewSpacePoint
         )
         
         m_Engine.admin().inputComponent().pointerEvents.append(pointerData)
