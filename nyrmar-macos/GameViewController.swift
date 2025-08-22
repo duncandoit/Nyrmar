@@ -21,9 +21,8 @@ class GameViewController: NSViewController
         
         m_MetalLayer.isGeometryFlipped = false
         m_MetalLayer.pixelFormat = MTLPixelFormat.bgra8Unorm
-        m_MetalLayer.contentsScale = NSScreen.main!.backingScaleFactor   // view.window is nil here
+        m_MetalLayer.contentsScale = NSScreen.main!.backingScaleFactor
         m_MetalLayer.frame = view.layer!.bounds
-        view.layer!.addSublayer(m_MetalLayer)
 
         // Ensure the viewport entity (singleton surface + camera)
         m_Engine.admin().initializeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
@@ -36,7 +35,7 @@ class GameViewController: NSViewController
             
             if event.isARepeat
             {
-                // Let event pass through
+                // Consume event
                 return nil
             }
             
@@ -51,12 +50,15 @@ class GameViewController: NSViewController
         
         let bindingsComp = m_Engine.admin().playerBindingsComponent()
         bindingsComp.pointer.append(contentsOf: [
+            
             PointerMapping(intent: .moveToLocation, phases: [.down])
         ])
         bindingsComp.digital.append(contentsOf: [
+            
             DigitalMapping(intent: .jump, inputs: [.space], policy: .onDown),
         ])
         bindingsComp.digitalAxis2D.append(contentsOf: [
+            
             DigitalAxis2DMapping(
                 intent: .cameraMove,
                 left:   [.custom("a")],
@@ -65,6 +67,12 @@ class GameViewController: NSViewController
                 up:     [.custom("w")],
             )
         ])
+    }
+    
+    override func loadView()
+    {
+        super.loadView()
+        view.layer = m_MetalLayer
     }
     
     override func viewDidLayout()
@@ -82,14 +90,12 @@ class GameViewController: NSViewController
     override func viewDidAppear()
     {
         super.viewDidAppear()
-        
         m_Engine.start()
     }
     
     override func viewWillDisappear()
     {
         super.viewWillDisappear()
-        
         m_Engine.stop()
     }
     
@@ -148,6 +154,32 @@ class GameViewController: NSViewController
         
         return false
     }
+    
+//    private func mapToGenericInput(_ e: NSEvent) -> GenericInput?
+//    {
+//        if let s = e.specialKey
+//        {
+//            switch s
+//            {
+//            case .leftArrow:  return .leftArrow
+//            case .rightArrow: return .rightArrow
+//            case .upArrow:    return .upArrow
+//            case .downArrow:  return .downArrow
+//            default: break
+//            }
+//        }
+//        
+//        // Fallback keyCode mapping (handles layouts where charactersIgnoringModifiers is nil)
+//        switch e.keyCode
+//        {
+//        case 0:  return .custom("a")
+//        case 1:  return .custom("s")
+//        case 2:  return .custom("d")
+//        case 13: return .custom("w")
+//        case 49: return .space
+//        default: return nil
+//        }
+//    }
     
     private func handleMouseEvent(at screenSpacePoint: CGPoint, phase: PointerPhase)
     {

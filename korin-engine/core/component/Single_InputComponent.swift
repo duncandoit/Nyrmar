@@ -168,6 +168,7 @@ struct Axis2DMapping: Codable, Hashable
 
 struct DigitalAxis2DMapping: Codable, Hashable
 {
+    let id: UUID
     let intent: PlayerCommandIntent
     let left: Set<GenericInput>
     let right: Set<GenericInput>
@@ -178,7 +179,8 @@ struct DigitalAxis2DMapping: Codable, Hashable
     let curve: AxisCurve
     let reportEpsilon: CGFloat
 
-    init(intent: PlayerCommandIntent,
+    init(id: UUID = UUID(),
+         intent: PlayerCommandIntent,
          left: Set<GenericInput>,
          right: Set<GenericInput>,
          down: Set<GenericInput>,
@@ -188,11 +190,16 @@ struct DigitalAxis2DMapping: Codable, Hashable
          curve: AxisCurve = .linear,
          reportEpsilon: CGFloat = 0.8
     ){
+        self.id = id
         self.intent = intent
-        self.left = left; self.right = right
-        self.down = down; self.up = up
-        self.invertX = invertX; self.invertY = invertY
-        self.curve = curve; self.reportEpsilon = reportEpsilon
+        self.left = left
+        self.right = right
+        self.down = down
+        self.up = up
+        self.invertX = invertX
+        self.invertY = invertY
+        self.curve = curve
+        self.reportEpsilon = reportEpsilon
     }
 }
 

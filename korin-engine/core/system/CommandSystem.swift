@@ -35,7 +35,7 @@ final class CommandSystem: System
             
             switch (command.intent, command.value)
             {
-            case (PlayerCommandIntent.jump, .isPressed(_)):
+            case (.jump, .isPressed(_)):
                 
                 var forceComp: PhysicsTermComponent! = thrallComp.sibling(PhysicsTermComponent.self)
                 if forceComp == nil
@@ -43,7 +43,8 @@ final class CommandSystem: System
                     forceComp = PhysicsTermComponent()
                     admin.addSibling(forceComp!, to: thrallComp)
                 }
-                forceComp.impulses.append(CGVector(dx: 0, dy: -20))
+                
+                forceComp.impulses.append(CGVector(dx: 0, dy: 30))
                 
             case (.moveToLocation, .screenPosition(let screenSpacePoint)):
                 
@@ -53,8 +54,6 @@ final class CommandSystem: System
                     physicsComp = PhysicsStateComponent()
                     admin.addSibling(physicsComp!, to: thrallComp)
                 }
-                
-                let worldSpacePoint = RenderSystem.screenToWorld(screenSpacePoint, admin: admin)
 
                 var exertionComp: MoveExertionComponent! = thrallComp.sibling(MoveExertionComponent.self)
                 if exertionComp == nil
@@ -66,7 +65,7 @@ final class CommandSystem: System
                 // Hysteresis: at least one world pixel
                 let ppu = CGFloat(admin.metalSurfaceComponent().pixelsPerUnit)
                 exertionComp.intent          = .seekTarget
-                exertionComp.target          = worldSpacePoint
+                exertionComp.target          = RenderSystem.screenToWorld(screenSpacePoint, admin: admin)
                 exertionComp.dampening       = 0.0   // No velocity dampening
                 exertionComp.acceleration    = 60.0  // Proportional push
                 exertionComp.arriveEpsilon   = max(exertionComp.arriveEpsilon, 1.0 / ppu)
@@ -80,12 +79,14 @@ final class CommandSystem: System
                     physicsComp = PhysicsStateComponent()
                     admin.addSibling(physicsComp, to: cameraComp)
                 }
+                
                 var exertionComp: MoveExertionComponent! = cameraComp.sibling(MoveExertionComponent.self)
                 if exertionComp == nil
                 {
                     exertionComp = MoveExertionComponent()
                     admin.addSibling(exertionComp!, to: cameraComp)
                 }
+                
                 exertionComp.intent = .moveInDirection
                 exertionComp.target = movementVector
                 exertionComp.desiredSpeed    = 10.0 * CGVector(dx: movementVector.x, dy: movementVector.y).length
@@ -94,7 +95,7 @@ final class CommandSystem: System
                 
             case let (intent, value):
                 
-                print("[" + #fileID + "]: Unexpected combo: \(intent), \(value)")
+                print("[" + #fileID + "]: Unexpected command combo: \(intent), \(value)")
             }
         }
 

@@ -19,6 +19,9 @@ final class InputSystem: System
         let clockComp = admin.clockComponent()
         var commands = inputComp.commandQueue
         
+        // snapshot edges
+        let edges = inputComp.digitalEdges
+        
         // First, emit onDown/onUp from edges AND update the held set.
         if !inputComp.digitalEdges.isEmpty
         {
@@ -36,7 +39,7 @@ final class InputSystem: System
         }
 
         // Map one-shot digital edges (onDown/onUp)
-        processDigitalEdges  (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        processDigitalEdges(edges: edges, input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
 
         // Axis from held state (now up to date)
         processPointerEvents (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
@@ -54,17 +57,18 @@ final class InputSystem: System
 
     @inline(__always)
     private func processDigitalEdges(
+        edges: [DigitalEdge],
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
         tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
-        guard !bindings.digital.isEmpty, !input.digitalEdges.isEmpty else
+        guard !bindings.digital.isEmpty, !edges.isEmpty else
         {
             return
         }
 
-        for edge in input.digitalEdges
+        for edge in edges
         {
             for mapping in bindings.digital where mapping.inputs.contains(edge.input)
             {
@@ -78,15 +82,12 @@ final class InputSystem: System
                     
                     stamp(intent: mapping.intent, value: .isPressed(false), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
                     
-                case .onHold:
+                case .onHold where edge.isDown:
                     
-                    // Stateless mapping layer: emit press on down; duration enforcement belongs in a separate system.
-                    if edge.isDown
-                    {
-                        stamp(intent: mapping.intent, value: .isPressed(true), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
-                    }
+                    stamp(intent: mapping.intent, value: .isPressed(true), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
                     
                 case .repeatEvery:
+                    
                     break // Repeats require state; handle in a dedicated repeat system if needed.
                     
                 default:
@@ -177,43 +178,69 @@ final class InputSystem: System
             return
         }
 
+        @inline(__always)
+        func isPressed(_ set: Set<GenericInput>) -> Bool
+        {
+            for k in set
+            {
+                if input.heldDigitalEdges.contains(k)
+                {
+                    return true
+                }
+            }
+            return false
+        }
+
         for m in bindings.digitalAxis2D
         {
-            // synthesize samples in [-1, 1] from key states
-            func pressed(_ set: Set<GenericInput>) -> Bool
+            var x: Float = 0
+            var y: Float = 0
+            if isPressed(m.right) { x += 1 }
+            if isPressed(m.left)  { x -= 1 }
+            if isPressed(m.up)    { y += 1 }
+            if isPressed(m.down)  { y -= 1 }
+
+            // invert flags
+            if m.invertX { x = -x }
+            if m.invertY { y = -y }
+
+            // normalize to unit circle
+            let mag = sqrt(x*x + y*y)
+            if mag > 1e-6
             {
-                // any of the inputs qualifies
-                for key in set
-                {
-                    if input.heldDigitalEdges.contains(key)
-                    {
-                        return true
-                    }
-                }
-                return false
+                let s: Float = (mag > 1) ? (1 / mag) : 1
+                x *= s
+                y *= s
             }
-            let xSample: Float = (pressed(m.right) ? 1 : 0) + (pressed(m.left) ? -1 : 0)
-            let ySample: Float = (pressed(m.up)    ? 1 : 0) + (pressed(m.down) ? -1 : 0)
 
-            // Resolve opposite keys: neutral if both (keeps behavior predictable)
-            let x = (xSample == 1 || xSample == -1) ? xSample : 0
-            let y = (ySample == 1 || ySample == -1) ? ySample : 0
+            let pt = CGPoint(x: Double(x), y: Double(y))
+            let key = "D:\(m.id.uuidString)"
 
-            let key = "D:\(m.left.hashValue)@\(m.right.hashValue)|\(m.down.hashValue)@\(m.up.hashValue)"
-            processAxis2DCore(
-                intent: m.intent,
-                x: x,
-                y: y,
-                deadZone: 0,
-                invertX: m.invertX,
-                invertY: m.invertY,
-                curve: m.curve,
-                reportEpsilon: m.reportEpsilon,
-                cacheKey: key,
-                input: input,
-                tickIndex: tickIndex,
-                out: &out
-            )
+            let previous = input.lastReported2D[key]
+            if shouldReport2D(previous: previous, newValue: pt, epsilon: m.reportEpsilon)
+            {
+                input.lastReported2D[key] = pt
+                stamp(
+                    intent: m.intent,
+                    value: .axis2D(pt),
+                    controllerID: input.controllerID,
+                    tickIndex: tickIndex,
+                    out: &out
+                )
+            }
+            
+            // Also emit when returning to zero so movement stops deterministically
+            else if previous != nil && previous! != .zero && pt == .zero
+            {
+                input.lastReported2D[key] = pt
+                stamp(
+                    intent: m.intent,
+                    value: .axis2D(pt),
+                    controllerID: input.controllerID,
+                    tickIndex: tickIndex,
+                    out: &out
+                )
+            }
         }
     }
     
@@ -234,73 +261,43 @@ final class InputSystem: System
             let x = input.analog1D[m.x] ?? 0
             let y = input.analog1D[m.y] ?? 0
             let key = "A:\(m.x)|\(m.y)" // namespace to avoid clashing with digital cache
-            processAxis2DCore(
-                intent: m.intent,
-                x: x,
-                y: y,
-                deadZone: m.deadZone,
-                invertX: m.invertX,
-                invertY: m.invertY,
-                curve: m.curve,
-                reportEpsilon: m.reportEpsilon,
-                cacheKey: key,
-                input: input,
-                tickIndex: tickIndex,
-                out: &out
-            )
-        }
-    }
-    
-    @inline(__always)
-    private func processAxis2DCore(
-        intent: PlayerCommandIntent,
-        x: Float,
-        y: Float,
-        deadZone: Float,
-        invertX: Bool,
-        invertY: Bool,
-        curve: AxisCurve,
-        reportEpsilon: CGFloat,
-        cacheKey: String,
-        input: Single_InputComponent,
-        tickIndex: UInt64,
-        out: inout [PlayerCommand]
-    ){
-        var xs = invertX ? -x : x
-        var ys = invertY ? -y : y
-        
-        // clamp to unit circle -> diagonals not faster
-        let len = sqrt(xs*xs + ys*ys)
-        if len > 1
-        {
-            xs /= len; ys /= len
-        }
+            
+            var xs = m.invertX ? -x : x
+            var ys = m.invertY ? -y : y
+            
+            // clamp to unit circle -> diagonals not faster
+            let len = sqrt(xs*xs + ys*ys)
+            if len > 1
+            {
+                xs /= len; ys /= len
+            }
 
-        let xCurved = applyCurve(applyDeadZone(xs, deadZone: deadZone), curve: curve)
-        let yCurved = applyCurve(applyDeadZone(ys, deadZone: deadZone), curve: curve)
+            let xCurved = applyCurve(applyDeadZone(xs, deadZone: m.deadZone), curve: m.curve)
+            let yCurved = applyCurve(applyDeadZone(ys, deadZone: m.deadZone), curve: m.curve)
 
-        // circular DZ on magnitude
-        let mag = hypot(Double(xCurved), Double(yCurved))
-        let dz  = Double(deadZone)
+            // circular DZ on magnitude
+            let mag = hypot(Double(xCurved), Double(yCurved))
+            let dz  = Double(m.deadZone)
 
-        var pt = CGPoint.zero
-        if mag > dz
-        {
-            let scale = (mag - dz) / (1 - dz)
-            pt = CGPoint(x: Double(xCurved) * scale, y: Double(yCurved) * scale)
-        }
+            var pt = CGPoint.zero
+            if mag > dz
+            {
+                let scale = (mag - dz) / (1 - dz)
+                pt = CGPoint(x: Double(xCurved) * scale, y: Double(yCurved) * scale)
+            }
 
-        let previous = input.lastReported2D[cacheKey]
-        if shouldReport2D(previous: previous, newValue: pt, epsilon: reportEpsilon)
-        {
-            input.lastReported2D[cacheKey] = pt
-            stamp(
-                intent: intent,
-                value: .axis2D(pt),
-                controllerID: input.controllerID,
-                tickIndex: tickIndex,
-                out: &out
-            )
+            let previous = input.lastReported2D[key]
+            if shouldReport2D(previous: previous, newValue: pt, epsilon: m.reportEpsilon)
+            {
+                input.lastReported2D[key] = pt
+                stamp(
+                    intent: m.intent,
+                    value: .axis2D(pt),
+                    controllerID: input.controllerID,
+                    tickIndex: tickIndex,
+                    out: &out
+                )
+            }
         }
     }
 
@@ -393,6 +390,6 @@ final class InputSystem: System
         {
             return newValue.x >= epsilon || newValue.y >= epsilon
         }
-        return hypot(newValue.x - prev.x, newValue.y - prev.y) >= epsilon
+        return abs(newValue.x - prev.x) >= epsilon || abs(newValue.y - prev.y) >= epsilon
     }
 }
