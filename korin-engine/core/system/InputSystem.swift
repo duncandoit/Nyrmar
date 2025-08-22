@@ -44,9 +44,8 @@ final class InputSystem: System
         // Axis from held state (now up to date)
         processPointerEvents (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
         processAxis1D        (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
-        processAxis2DDigital (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
-        processAxis2DAnalog  (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
-
+        processAxis2D        (input: inputComp, bindings: bindingsComp, tickIndex: clockComp.tickIndex, out: &commands)
+        
         // Clear one-frame buffers
         inputComp.digitalEdges.removeAll(keepingCapacity: true)
         inputComp.pointerEvents.removeAll(keepingCapacity: true)
@@ -155,10 +154,10 @@ final class InputSystem: System
             let dzValue = applyDeadZone(raw, deadZone: mapping.deadZone)
             let curved = applyCurve(dzValue, curve: mapping.curve)
 
-            let previous = input.lastReported1D[mapping.input]
+            let previous = input.lastReported1DByInput[mapping.input]
             if shouldReport1D(previous: previous, newValue: curved, epsilon: mapping.reportEpsilon)
             {
-                input.lastReported1D[mapping.input] = curved
+                input.lastReported1DByInput[mapping.input] = curved
                 stamp(intent: mapping.intent, value: .axis1D(curved), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
             }
         }
@@ -167,140 +166,98 @@ final class InputSystem: System
     // MARK: - Axis 2D
     
     @inline(__always)
-    private func processAxis2DDigital(
+    private func processAxis2D(
         input: Single_InputComponent,
         bindings: Single_PlayerBindingsComponent,
         tickIndex: UInt64,
         out: inout [PlayerCommand]
     ){
-        guard !bindings.digitalAxis2D.isEmpty else
-        {
-            return
-        }
+        // Accumulate contributions per intent
+        var vectorByIntent: [PlayerCommandIntent: CGVector] = [:]
+        var epsilonByIntent: [PlayerCommandIntent: CGFloat] = [:]
 
-        @inline(__always)
-        func isPressed(_ set: Set<GenericInput>) -> Bool
-        {
-            for k in set
-            {
-                if input.heldDigitalEdges.contains(k)
-                {
-                    return true
-                }
-            }
-            return false
-        }
-
-        for m in bindings.digitalAxis2D
+        // Digital keys are made into synthetic axes
+        for digitalBinding in bindings.digitalAxis2D
         {
             var x: Float = 0
             var y: Float = 0
-            if isPressed(m.right) { x += 1 }
-            if isPressed(m.left)  { x -= 1 }
-            if isPressed(m.up)    { y += 1 }
-            if isPressed(m.down)  { y -= 1 }
+            if inputHeld(digitalBinding.right, onInput: input) { x += 1 }
+            if inputHeld(digitalBinding.left,  onInput: input) { x -= 1 }
+            if inputHeld(digitalBinding.up,    onInput: input) { y += 1 }
+            if inputHeld(digitalBinding.down,  onInput: input) { y -= 1 }
+            if digitalBinding.invertX { x = -x }
+            if digitalBinding.invertY { y = -y }
 
-            // invert flags
-            if m.invertX { x = -x }
-            if m.invertY { y = -y }
-
-            // normalize to unit circle
-            let mag = sqrt(x*x + y*y)
-            if mag > 1e-6
+            if x != 0 || y != 0
             {
-                let s: Float = (mag > 1) ? (1 / mag) : 1
-                x *= s
-                y *= s
+                let vector = CGVector(dx: CGFloat(x), dy: CGFloat(y))
+                vectorByIntent[digitalBinding.intent, default: .zero] = vectorByIntent[digitalBinding.intent, default: .zero] + vector
             }
-
-            let pt = CGPoint(x: Double(x), y: Double(y))
-            let key = "D:\(m.id.uuidString)"
-
-            let previous = input.lastReported2D[key]
-            if shouldReport2D(previous: previous, newValue: pt, epsilon: m.reportEpsilon)
-            {
-                input.lastReported2D[key] = pt
-                stamp(
-                    intent: m.intent,
-                    value: .axis2D(pt),
-                    controllerID: input.controllerID,
-                    tickIndex: tickIndex,
-                    out: &out
-                )
-            }
-            
-            // Also emit when returning to zero so movement stops deterministically
-            else if previous != nil && previous! != .zero && pt == .zero
-            {
-                input.lastReported2D[key] = pt
-                stamp(
-                    intent: m.intent,
-                    value: .axis2D(pt),
-                    controllerID: input.controllerID,
-                    tickIndex: tickIndex,
-                    out: &out
-                )
-            }
-        }
-    }
-    
-    @inline(__always)
-    private func processAxis2DAnalog(
-        input: Single_InputComponent,
-        bindings: Single_PlayerBindingsComponent,
-        tickIndex: UInt64,
-        out: inout [PlayerCommand]
-    ){
-        guard !bindings.axis2D.isEmpty else
-        {
-            return
+            epsilonByIntent[digitalBinding.intent] = min(epsilonByIntent[digitalBinding.intent] ?? .greatestFiniteMagnitude, digitalBinding.reportEpsilon)
         }
 
-        for m in bindings.axis2D
+        // Analog
+        for analogBinding in bindings.axis2D
         {
-            let x = input.analog1D[m.x] ?? 0
-            let y = input.analog1D[m.y] ?? 0
-            let key = "A:\(m.x)|\(m.y)" // namespace to avoid clashing with digital cache
-            
-            var xs = m.invertX ? -x : x
-            var ys = m.invertY ? -y : y
-            
-            // clamp to unit circle -> diagonals not faster
-            let len = sqrt(xs*xs + ys*ys)
-            if len > 1
-            {
-                xs /= len; ys /= len
-            }
+            var x = input.analog1D[analogBinding.x] ?? 0
+            var y = input.analog1D[analogBinding.y] ?? 0
+            if analogBinding.invertX { x = -x }
+            if analogBinding.invertY { y = -y }
 
-            let xCurved = applyCurve(applyDeadZone(xs, deadZone: m.deadZone), curve: m.curve)
-            let yCurved = applyCurve(applyDeadZone(ys, deadZone: m.deadZone), curve: m.curve)
+            let xCurved = applyCurve(applyDeadZone(x, deadZone: analogBinding.deadZone), curve: analogBinding.curve)
+            let yCurved = applyCurve(applyDeadZone(y, deadZone: analogBinding.deadZone), curve: analogBinding.curve)
 
             // circular DZ on magnitude
-            let mag = hypot(Double(xCurved), Double(yCurved))
-            let dz  = Double(m.deadZone)
-
-            var pt = CGPoint.zero
-            if mag > dz
+            let magnitude = hypot(Double(xCurved), Double(yCurved))
+            let deadZone  = Double(analogBinding.deadZone)
+            var outX: Double = 0
+            var outY: Double = 0
+            
+            if magnitude > deadZone
             {
-                let scale = (mag - dz) / (1 - dz)
-                pt = CGPoint(x: Double(xCurved) * scale, y: Double(yCurved) * scale)
+                let scale = (magnitude - deadZone) / (1 - deadZone)
+                outX = Double(xCurved) * scale
+                outY = Double(yCurved) * scale
             }
-
-            let previous = input.lastReported2D[key]
-            if shouldReport2D(previous: previous, newValue: pt, epsilon: m.reportEpsilon)
+            
+            let vector = CGVector(dx: outX, dy: outY)
+            if vector.dx != 0 || vector.dy != 0
             {
-                input.lastReported2D[key] = pt
-                stamp(
-                    intent: m.intent,
-                    value: .axis2D(pt),
-                    controllerID: input.controllerID,
-                    tickIndex: tickIndex,
-                    out: &out
-                )
+                vectorByIntent[analogBinding.intent, default: .zero] = vectorByIntent[analogBinding.intent, default: .zero] + vector
+            }
+            epsilonByIntent[analogBinding.intent] = min(epsilonByIntent[analogBinding.intent] ?? .greatestFiniteMagnitude, analogBinding.reportEpsilon)
+        }
+
+        // Finalize per intent: clamp to unit circle, throttle, stamp once
+        for (intent, vector) in vectorByIntent
+        {
+            // clamp to unit circle so diagonals aren’t faster
+            let length = vector.length
+            let clamped = (length > 1) ? vector * (1/length) : vector
+            let pt = CGPoint(x: clamped.dx, y: clamped.dy)
+
+            let prev = input.lastReported2DByIntent[intent]
+            
+            let epsilon: CGFloat = epsilonByIntent[intent] ?? 0
+            if shouldReport2D(previous: prev, newValue: pt, epsilon: epsilon)
+            {
+                input.lastReported2DByIntent[intent] = pt
+                stamp(intent: intent, value: .axis2D(pt), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
+            }
+        }
+
+        // Also emit zeros when all inputs for an intent are released (to stop motion)
+        let allIntents = Set(bindings.digitalAxis2D.map{$0.intent} + bindings.axis2D.map{$0.intent})
+        for intent in allIntents where vectorByIntent[intent] == nil
+        {
+            if input.lastReported2DByIntent[intent] != .some(.zero)
+            {
+                input.lastReported2DByIntent[intent] = .zero
+                stamp(intent: intent, value: .axis2D(.zero), controllerID: input.controllerID, tickIndex: tickIndex, out: &out)
             }
         }
     }
-
+  
     // MARK: - Helpers
 
     @inline(__always)
@@ -312,6 +269,20 @@ final class InputSystem: System
         out: inout [PlayerCommand]
     ){
         out.append(PlayerCommand(controllerID: controllerID, intent: intent, value: value, tickIndex: tickIndex))
+    }
+    
+    @inline(__always)
+    private func inputHeld(_ inputs: Set<GenericInput>, onInput inputComp: Single_InputComponent) -> Bool
+    {
+        for input in inputs
+        {
+            if inputComp.heldDigitalEdges.contains(input)
+            {
+                return true
+            }
+        }
+        
+        return false
     }
 
     @inline(__always)
@@ -386,10 +357,10 @@ final class InputSystem: System
     @inline(__always)
     private func shouldReport2D(previous: CGPoint?, newValue: CGPoint, epsilon: CGFloat) -> Bool
     {
-        guard let prev = previous else
+        guard previous != nil else
         {
-            return newValue.x >= epsilon || newValue.y >= epsilon
+            return abs(newValue.x) >= epsilon || abs(newValue.y) >= epsilon
         }
-        return abs(newValue.x - prev.x) >= epsilon || abs(newValue.y - prev.y) >= epsilon
+        return abs(newValue.x) >= epsilon || abs(newValue.y) >= epsilon
     }
 }

@@ -188,7 +188,7 @@ struct DigitalAxis2DMapping: Codable, Hashable
          invertX: Bool = false,
          invertY: Bool = false,
          curve: AxisCurve = .linear,
-         reportEpsilon: CGFloat = 0.8
+         reportEpsilon: CGFloat = 0.07
     ){
         self.id = id
         self.intent = intent
@@ -229,8 +229,8 @@ final class Single_InputComponent: Component
     var heldDigitalEdges: Set<GenericInput> = []   // persistent across frames
 
     // Minimal persistence to throttle analog spam
-    var lastReported1D: [GenericInput: Float] = [:]
-    var lastReported2D: [String: CGPoint] = [:] // key "X+Y" for a pair
+    var lastReported1DByInput: [GenericInput: Float] = [:]
+    var lastReported2DByIntent: [PlayerCommandIntent: CGPoint] = [:]
 
     // Output queue (deterministic, serializable)
     var commandQueue: [PlayerCommand] = []
