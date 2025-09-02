@@ -14,7 +14,7 @@ final class ClockPreSimSystem: System
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let clockComp = component as! Single_ClockComponent
-        let settingsComp = admin.settingsComponent()
+        let settingsComp = admin.singleton(Single_GameSettingsComponent.self)
         let frameRateTarget = max(1.0, settingsComp.frameRateTarget)
         clockComp.frameTime = 1.0 / frameRateTarget
         

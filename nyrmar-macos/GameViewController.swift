@@ -12,6 +12,12 @@ class GameViewController: NSViewController
 {
     private let m_MetalLayer = CAMetalLayer()
     private var m_Engine: EngineLoop!
+    
+    override func loadView()
+    {
+        super.loadView()
+        view.layer = m_MetalLayer
+    }
 
     override func viewDidLoad()
     {
@@ -25,7 +31,7 @@ class GameViewController: NSViewController
         m_MetalLayer.frame = view.layer!.bounds
 
         // Ensure the viewport entity (singleton surface + camera)
-        m_Engine.admin().initializeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
+        m_Engine.admin().makeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
         
         NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
             guard let self = self else
@@ -48,7 +54,7 @@ class GameViewController: NSViewController
             return event
         }
         
-        let bindingsComp = m_Engine.admin().playerBindingsComponent()
+        let bindingsComp = m_Engine.admin().singleton(Single_PlayerBindingsComponent.self)
         bindingsComp.pointer.append(contentsOf: [
             
             PointerMapping(intent: .moveToLocation, phases: [.down])
@@ -69,10 +75,10 @@ class GameViewController: NSViewController
         ])
     }
     
-    override func loadView()
+    override func viewDidAppear()
     {
-        super.loadView()
-        view.layer = m_MetalLayer
+        super.viewDidAppear()
+        m_Engine.start()
     }
     
     override func viewDidLayout()
@@ -85,12 +91,6 @@ class GameViewController: NSViewController
             width: m_MetalLayer.bounds.width * m_MetalLayer.contentsScale,
             height: m_MetalLayer.bounds.height * m_MetalLayer.contentsScale
         )
-    }
-    
-    override func viewDidAppear()
-    {
-        super.viewDidAppear()
-        m_Engine.start()
     }
     
     override func viewWillDisappear()
@@ -107,7 +107,7 @@ class GameViewController: NSViewController
     @discardableResult
     private func handleKey(_ event: NSEvent) -> Bool
     {
-        let inputComp = m_Engine.admin().inputComponent()
+        let inputComp = m_Engine.admin().singleton(Single_InputComponent.self)
         let isDown = (event.type == .keyDown)
         var input: GenericInput?
 
@@ -191,7 +191,7 @@ class GameViewController: NSViewController
             screenLocation: viewSpacePoint
         )
         
-        m_Engine.admin().inputComponent().pointerEvents.append(pointerData)
+        m_Engine.admin().singleton(Single_InputComponent.self).pointerEvents.append(pointerData)
     }
     
     override func mouseDown(with event: NSEvent)

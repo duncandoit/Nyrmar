@@ -7,7 +7,7 @@
 
 import CoreFoundation
 
-class TransformComponent: Component
+final class TransformComponent: Component
 {
     static let typeID: ComponentTypeID = componentTypeID(for: TransformComponent.self)
     var siblings: SiblingContainer?

@@ -57,10 +57,7 @@ final class ViewportSystem: System
         }
         
         // Sync the device with the lazy created texture cache
-        guard let cacheComp = admin.metalTextureCacheComponent() else
-        {
-            return
-        }
+        let cacheComp = admin.singleton(Single_MetalTextureCacheComponent.self)
         
         let needsSync = cacheComp.loaderDeviceID != ObjectIdentifier(device)
         if needsSync

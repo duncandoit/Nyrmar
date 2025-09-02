@@ -15,10 +15,7 @@ final class TilemapSpawnSystem: System
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let prefabComp = component as! TilemapPrefabComponent
-        guard let cacheComp = admin.metalTextureCacheComponent() else
-        {
-            return
-        }
+        let cacheComp = admin.singleton(Single_MetalTextureCacheComponent.self)
         
         guard let loader = cacheComp.textureLoader else
         {

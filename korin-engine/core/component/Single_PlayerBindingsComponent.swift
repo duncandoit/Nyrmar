@@ -9,7 +9,7 @@ import Foundation
 
 /// Singleton Component: Should have only one instance per `EntityAdmin`
 /// Binds `PlayerIntent` with generic input information
-final class Single_PlayerBindingsComponent: Component
+final class Single_PlayerBindingsComponent: SingletonComponent
 {
     static let typeID = componentTypeID(for: Single_PlayerBindingsComponent.self)
     var siblings: SiblingContainer?

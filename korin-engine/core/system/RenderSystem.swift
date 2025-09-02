@@ -29,16 +29,17 @@ final class RenderSystem: System
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let surfaceComp = component as! Single_MetalSurfaceComponent
-        let clockComp = admin.clockComponent()
+        let clockComp = admin.singleton(Single_ClockComponent.self)
         guard let cameraTransformComp = surfaceComp.sibling(TransformComponent.self) else
         {
             return
         }
         
-        guard let layer = surfaceComp.layer,
-              let device = surfaceComp.device,
-              let queue  = surfaceComp.queue,
-              let drawable = layer.nextDrawable()
+        guard
+            let layer = surfaceComp.layer,
+            let device = surfaceComp.device,
+            let queue  = surfaceComp.queue,
+            let drawable = layer.nextDrawable()
         else
         {
             return
@@ -212,7 +213,7 @@ final class RenderSystem: System
     
     static func screenToWorld(_ screenSpacePoint: CGPoint, admin: EntityAdmin) -> CGPoint?
     {
-        let surfaceComp = admin.metalSurfaceComponent()
+        let surfaceComp = admin.singleton(Single_MetalSurfaceComponent.self)
         guard let layer = surfaceComp.layer else
         {
             return nil
@@ -268,7 +269,7 @@ final class RenderSystem: System
 
     static func worldToScreen(_ worldPoint: CGPoint, admin: EntityAdmin) -> CGPoint?
     {
-        let surfaceComp = admin.metalSurfaceComponent()
+        let surfaceComp = admin.singleton(Single_MetalSurfaceComponent.self)
         guard let layer = surfaceComp.layer else
         {
             return nil

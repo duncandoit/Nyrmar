@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Single_GameSettingsComponent: Component
+final class Single_GameSettingsComponent: SingletonComponent
 {
     static let typeID = componentTypeID(for: Single_GameSettingsComponent.self)
     var siblings: SiblingContainer?

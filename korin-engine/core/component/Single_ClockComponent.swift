@@ -9,7 +9,7 @@ import Foundation
 
 /// Singleton Component: Should have only one instance per `EntityAdmin`
 /// Maintains quantized frame time information
-final class Single_ClockComponent: Component
+final class Single_ClockComponent: SingletonComponent
 {
     static let typeID = componentTypeID(for: Single_ClockComponent.self)
     var siblings: SiblingContainer?
@@ -47,13 +47,8 @@ final class Single_ClockComponent: Component
     
     /// Safety limit against spiral-of-death.
     /// Only the clock uses it to bound the loop. Ordinary systems ignore it.
-    let maxSimulationSteps: UInt64
+    let maxSimulationSteps: UInt64 = 5
     
     /// Number of simulation steps to be taken this tick in order to reduce the lag.
     var simulationSteps: UInt64 = 0
-    
-    init(maxSimulationSteps: UInt64 = 5)
-    {
-        self.maxSimulationSteps = maxSimulationSteps
-    }
 }

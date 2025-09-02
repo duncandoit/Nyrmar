@@ -9,7 +9,7 @@ import QuartzCore
 
 /// Singleton Component: Should have only one instance per `EntityAdmin`
 /// Metal context for drawing to the GPU
-final class Single_MetalSurfaceComponent: Component
+final class Single_MetalSurfaceComponent: SingletonComponent
 {
     static let typeID = componentTypeID(for: Single_MetalSurfaceComponent.self)
     var siblings: SiblingContainer?
@@ -25,9 +25,4 @@ final class Single_MetalSurfaceComponent: Component
     var pixelFormat: MTLPixelFormat = .bgra8Unorm
     var clearColor = MTLClearColor(red: 0.10, green: 0.10, blue: 0.11, alpha: 1.0)
     var pixelsPerUnit: CGFloat = 100
-    
-    init(layer: CAMetalLayer?)
-    {
-        self.layer = layer
-    }
 }

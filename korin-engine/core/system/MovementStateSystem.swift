@@ -67,7 +67,7 @@ final class MovementStateSystem: System
 
             let arriveEpsilon = max(
                 exertionComp.arriveEpsilon,
-                1.0 / CGFloat(admin.metalSurfaceComponent().pixelsPerUnit)
+                1.0 / CGFloat(admin.singleton(Single_MetalSurfaceComponent.self).pixelsPerUnit)
             )
 
             if crossed || distance <= arriveEpsilon

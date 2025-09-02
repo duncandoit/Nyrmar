@@ -24,7 +24,6 @@
 				core/component/MoveStateComponent.swift,
 				core/component/PhysicsStateComponent.swift,
 				core/component/PhysicsTermComponent.swift,
-				core/component/Single_Camera2DComponent.swift,
 				core/component/Single_ClockComponent.swift,
 				core/component/Single_GameSettingsComponent.swift,
 				core/component/Single_InputComponent.swift,
@@ -67,7 +66,6 @@
 				core/component/MoveStateComponent.swift,
 				core/component/PhysicsStateComponent.swift,
 				core/component/PhysicsTermComponent.swift,
-				core/component/Single_Camera2DComponent.swift,
 				core/component/Single_ClockComponent.swift,
 				core/component/Single_GameSettingsComponent.swift,
 				core/component/Single_InputComponent.swift,
@@ -110,7 +108,6 @@
 				core/component/MoveStateComponent.swift,
 				core/component/PhysicsStateComponent.swift,
 				core/component/PhysicsTermComponent.swift,
-				core/component/Single_Camera2DComponent.swift,
 				core/component/Single_ClockComponent.swift,
 				core/component/Single_GameSettingsComponent.swift,
 				core/component/Single_InputComponent.swift,
@@ -308,7 +305,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C37774A32E5498A30009D73D /* Build configuration list for PBXProject "nyrmar" */;
+			buildConfigurationList = C37774A32E5498A30009D73D /* Build configuration list for PBXProject "Nyrmar" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -689,7 +686,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C37774A32E5498A30009D73D /* Build configuration list for PBXProject "nyrmar" */ = {
+		C37774A32E5498A30009D73D /* Build configuration list for PBXProject "Nyrmar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C37774F32E5498A60009D73D /* Debug */,

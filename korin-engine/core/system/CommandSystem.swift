@@ -14,14 +14,14 @@ final class CommandSystem: System
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let thrallComp = component as! ThrallComponent
-        let inputComp = admin.inputComponent()
+        let inputComp = admin.singleton(Single_InputComponent.self)
         
         guard thrallComp.controllerID == inputComp.controllerID else
         {
             return
         }
         
-        let clockComp = admin.clockComponent()
+        let clockComp = admin.singleton(Single_ClockComponent.self)
         var deferredCommands: [PlayerCommand] = []
 
         for command in inputComp.commandQueue
@@ -63,7 +63,7 @@ final class CommandSystem: System
                 }
                 
                 // Hysteresis: at least one world pixel
-                let ppu = CGFloat(admin.metalSurfaceComponent().pixelsPerUnit)
+                let ppu = CGFloat(admin.singleton(Single_MetalSurfaceComponent.self).pixelsPerUnit)
                 exertionComp.intent          = .seekTarget
                 exertionComp.target          = RenderSystem.screenToWorld(screenSpacePoint, admin: admin)
                 exertionComp.dampening       = 0.0   // No velocity dampening
@@ -72,7 +72,7 @@ final class CommandSystem: System
                 
             case (.cameraMove, .axis2D(let movementVector)):
                 
-                let cameraComp = admin.metalSurfaceComponent()
+                let cameraComp = admin.singleton(Single_MetalSurfaceComponent.self)
                 var physicsComp: PhysicsStateComponent! = cameraComp.sibling(PhysicsStateComponent.self)
                 if physicsComp == nil
                 {

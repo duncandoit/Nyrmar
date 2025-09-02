@@ -15,10 +15,13 @@ final class SpriteSpawnSystem: System
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let prefabComp = component as! SpritePrefabComponent
-        guard let cacheComp = admin.metalTextureCacheComponent(),
-            let transformComp: TransformComponent = prefabComp.sibling(TransformComponent.self),
-            let loader = cacheComp.textureLoader
-        else
+        guard let transformComp = prefabComp.sibling(TransformComponent.self) else
+        {
+            return
+        }
+        
+        let cacheComp = admin.singleton(Single_MetalTextureCacheComponent.self)
+        guard let loader = cacheComp.textureLoader else
         {
             return
         }

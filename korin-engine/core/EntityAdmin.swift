@@ -26,35 +26,6 @@ class EntityAdmin
     private let m_InputSystem: InputSystem
     private let m_RenderSystem: RenderSystem
     
-    // MARK: - Singleton Components
-    
-    // Rendering
-    private var m_ViewportEntity: Entity?
-    private weak var m_MetalSurfaceComponent: Single_MetalSurfaceComponent?
-    
-    // Asset Management
-    private weak var m_MetalTextureCacheComponent: Single_MetalTextureCacheComponent?
-    
-    // Sim Clock
-    private var m_ClockEntity: Entity?
-    private weak var m_ClockComponent: Single_ClockComponent?
-    
-    // Input
-    private var m_InputEntity: Entity?
-    private weak var m_InputComponent: Single_InputComponent?
-    
-    // Control Bindings
-    private var m_PlayerBindingsEntity: Entity?
-    private weak var m_PlayerBindingsComponent: Single_PlayerBindingsComponent?
-    
-    // Game Settings
-    private weak var m_SettingsComponent: Single_GameSettingsComponent?
-    
-    // Test Sprite
-    private var m_TestSpriteEntity: Entity!
-    
-    // MARK: - Initializers
-    
     required init()
     {
         // Initialize Systems
@@ -81,7 +52,6 @@ class EntityAdmin
             CommandSystem(),
                 // Unsynchronized movement
             MovementExertionSystem(),
-                
                 // AI perception
                 // PlatformerPlayerController
                 // WallCrawler
@@ -97,24 +67,27 @@ class EntityAdmin
             ViewportSystem(),
             SpriteSpawnSystem(),
             TilemapSpawnSystem(),
-                //LifeSpanSystem,
+                // LifeSpanSystem,
                 // SpawnOnDestroy
-            //InputCleanupSystem()
+                // InputCleanupSystem()
         ]
         
-        // Initialize Singleton Components
-        initializeInput()
-        initializeTestSprite(textureName: "finalfall-logo")
+        makeInputComponent()
+        makeTestSprite(textureName: "finalfall-logo")
     }
     
-    func initializeMetalViewport(layer: CAMetalLayer, pixelsPerUnit: CGFloat = 100)
+    // MARK: Initial Setup
+    
+    private func makeInputComponent()
     {
-        guard m_ViewportEntity == nil else
-        {
-            return
-        }
-        
-        let surfaceComp = Single_MetalSurfaceComponent(layer: layer)
+        _ = singleton(Single_InputComponent.self)
+        print("[" + #fileID + "]: " + #function + " -> Initialized Singleton Entity.")
+    }
+    
+    func makeMetalViewport(layer: CAMetalLayer, pixelsPerUnit: CGFloat = 100)
+    {
+        let surfaceComp = singleton(Single_MetalSurfaceComponent.self)
+        surfaceComp.layer = layer
         surfaceComp.pixelsPerUnit = pixelsPerUnit
         
         let transformComp = TransformComponent()
@@ -129,60 +102,18 @@ class EntityAdmin
         physicsComp.airDrag        = 0.0
         physicsComp.groundFriction = 0.0
         
-        m_ViewportEntity = addEntity(with: surfaceComp, transformComp, moveStateComp, physicsComp)!
-        m_MetalSurfaceComponent = surfaceComp
+        addSiblings([transformComp, moveStateComp, physicsComp], to: surfaceComp)
         
-        print("[" + #fileID + "]: " + #function + " -> Registered Metal Viewport")
+        print("[" + #fileID + "]: " + #function + " -> Made Metal Viewport.")
     }
     
-    func initializeMetalTextureCache()
-    {
-        guard let surfaceComp = m_MetalSurfaceComponent else
-        {
-            return
-        }
-        
-        guard surfaceComp.device != nil else
-        {
-            return
-        }
-        
-        guard m_MetalTextureCacheComponent == nil else
-        {
-            return
-        }
-        
-        let cacheComp = Single_MetalTextureCacheComponent()
-        _ = addEntity(with: cacheComp)!
-        m_MetalTextureCacheComponent = cacheComp
-    }
-    
-    private func initializeInput()
-    {
-        guard m_InputEntity == nil else
-        {
-            return
-        }
-        
-        let inputComp = Single_InputComponent()
-        let entity = addEntity(with: inputComp)!
-        m_InputEntity = entity
-        m_InputComponent = inputComp
-        print("[" + #fileID + "]: " + #function + " -> Registered input")
-    }
-    
-    func initializeTestSprite(
+    func makeTestSprite(
         textureName: String,
         worldPosition: CGPoint = .zero,
         worldSize: CGSize = .init(width: 1, height: 1),
         tint: SIMD4<Float> = .init(1, 1, 1, 1),
         addCollision: Bool = false
     ){
-        guard m_TestSpriteEntity == nil else
-        {
-            return
-        }
-        
         // Author via prefab and the SpawnSystem will resolve to SpriteRenderComponent
         let transform = TransformComponent()
         transform.position = worldPosition
@@ -193,7 +124,7 @@ class EntityAdmin
         prefab.tint = tint
         
         let collisionComp = CollisionComponent(shape: .aabb(worldSize))
-        let thrallComp = ThrallComponent(controllerID: inputComponent().controllerID)
+        let thrallComp = ThrallComponent(controllerID: singleton(Single_InputComponent.self).controllerID)
         let physicsComp = PhysicsStateComponent()
         physicsComp.mass           = 1.0
         physicsComp.gravityScale   = 1.0
@@ -221,85 +152,9 @@ class EntityAdmin
         let baseStatsComp = BaseStatsComponent()
         baseStatsComp.moveSpeedMax = 10
 
-        let entity = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, exertionComp, baseStatsComp)
-        m_TestSpriteEntity = entity
-    }
-    
-    // MARK: - Singleton Component Accessors
-    
-    func metalSurfaceComponent() -> Single_MetalSurfaceComponent
-    {
-        return m_MetalSurfaceComponent!
-    }
-    
-    func metalTextureCacheComponent() -> Single_MetalTextureCacheComponent?
-    {
-        if let cacheComp = m_MetalTextureCacheComponent
-        {
-            return cacheComp
-        }
+        _ = addEntity(with: transform, prefab, collisionComp, thrallComp, physicsComp, forceComp, moveStateComp, exertionComp, baseStatsComp)
         
-        initializeMetalTextureCache()
-        
-        return m_MetalTextureCacheComponent
-    }
-    
-    func testSpriteEntity() -> Entity
-    {
-        return m_TestSpriteEntity
-    }
-    
-    func inputComponent() -> Single_InputComponent
-    {
-        if let inputComp = m_InputComponent
-        {
-            return inputComp
-        }
-        
-        initializeInput()
-        
-        return m_InputComponent!
-    }
-    
-    func playerBindingsComponent() -> Single_PlayerBindingsComponent
-    {
-        if let bindingsComp = m_PlayerBindingsComponent
-        {
-            return bindingsComp
-        }
-        
-        let bindingsComp = Single_PlayerBindingsComponent()
-        let entity = addEntity(with: bindingsComp)!
-        m_PlayerBindingsEntity = entity
-        m_PlayerBindingsComponent = bindingsComp
-        return bindingsComp
-    }
-    
-    func clockComponent() -> Single_ClockComponent
-    {
-        if let clockComp = m_ClockComponent
-        {
-            return clockComp
-        }
-        
-        let clockComp = Single_ClockComponent()
-        let entity = addEntity(with: clockComp)!
-        m_ClockEntity = entity
-        m_ClockComponent = clockComp
-        return clockComp
-    }
-    
-    func settingsComponent() -> Single_GameSettingsComponent
-    {
-        if let settingsComp = m_SettingsComponent
-        {
-            return settingsComp
-        }
-        
-        let settingsComp = Single_GameSettingsComponent()
-        _ = addEntity(with: settingsComp)!
-        m_SettingsComponent = settingsComp
-        return settingsComp
+        print("[" + #fileID + "]: " + #function + " -> Made test sprite.")
     }
     
     // MARK: - Helper Accessors
@@ -336,7 +191,7 @@ class EntityAdmin
         let entity = Entity()
         addComponents(components, to: entity)
         
-        print("[" + #fileID + "]: Entity Added: \(entity).")
+       // print("[" + #fileID + "]: Entity Added: \(entity).")
         return entity
     }
     
@@ -469,7 +324,7 @@ class EntityAdmin
         // record reverse mapping
         m_EntitiesByComponent[ObjectIdentifier(component)] = entity
         
-        print("[" + #fileID + "]: Component Added: (typeid:\(String(describing: component.typeID()))) \(String(describing: component)), to Entity:\(entity)")
+        //print("[" + #fileID + "]: Component Added: (typeid:\(String(describing: component.typeID()))) \(String(describing: component)), to Entity:\(entity)")
     }
     
     func addComponents(_ components: [Component], to entity: Entity)
@@ -519,6 +374,21 @@ class EntityAdmin
         }
         
         return children.isEmpty ? nil : children
+    }
+    
+    func hasComponent<T: Component>(ofType componentType: T.Type = T.self, from entity: Entity) -> Bool
+    {
+        return getComponent(ofType: componentType, from: entity) != nil ? true : false
+    }
+    
+    func hasSingletonComponent<T: Component & SingletonComponent>(ofType componentType: T.Type = T.self) -> Bool
+    {
+        return m_ComponentsByType[componentType.typeID] != nil ? true : false
+    }
+    
+    func numberOfComponents<T: Component>(ofType componentType: T.Type = T.self) -> Int
+    {
+        return getComponents(ofType: componentType)?.count ?? 0
     }
     
     /// Slower than removeComponent(ofType:from:). If you have the Entity, use that one otherwise use this one.
@@ -590,7 +460,7 @@ class EntityAdmin
         // Remove from the shared sibling container
         siblings.refs.removeValue(forKey: componentID)
         
-        print("[" + #fileID + "]: Component Removed: (typeid:\(String(describing: componentID))), Entity:\(entity).")
+        //print("[" + #fileID + "]: Component Removed: (typeid:\(String(describing: componentID))), Entity:\(entity).")
     }
     
     /// Add a new component as a sibling to an existing component and the same entity.
@@ -605,26 +475,47 @@ class EntityAdmin
         addComponent(component, to: entity)
     }
     
+    func addSiblings(_ components: [Component], to existingComponent: Component)
+    {
+        for component in components
+        {
+            addSibling(component, to: existingComponent)
+        }
+    }
+    
+    func singleton<T: Component & SingletonComponent>(_ type: T.Type = T.self) -> T
+    {
+        if let existing = getComponents(ofType: type)?.first
+        {
+            return existing
+        }
+        
+        let newSingleton = T()
+        _ = addEntity(with: newSingleton)
+        
+        return newSingleton
+    }
+    
     // MARK: - Update
 
     func variableUpdate(rawDeltaTime: TimeInterval)
     {
-        let clockComp = clockComponent()
+        let clockComp = singleton(Single_ClockComponent.self)
         m_ClockPreSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
-        m_InputSystem.update(deltaTime: rawDeltaTime, component: inputComponent(), admin: self)
+        m_InputSystem.update(deltaTime: rawDeltaTime, component: singleton(Single_InputComponent.self), admin: self)
         
         let clampedDeltaTime = min(max(rawDeltaTime, 0.0), 0.25)
         updateSystems(deltaTime: clampedDeltaTime)
         
         m_ClockPostSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
-        m_RenderSystem.update(deltaTime: clockComp.frameTime, component: metalSurfaceComponent(), admin: self)
+        m_RenderSystem.update(deltaTime: clockComp.frameTime, component: singleton(Single_MetalSurfaceComponent.self), admin: self)
     }
     
     func fixedUpdate(rawDeltaTime: TimeInterval)
     {
-        let clockComp = clockComponent()
+        let clockComp = singleton(Single_ClockComponent.self)
         m_ClockPreSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
-        m_InputSystem.update(deltaTime: rawDeltaTime, component: inputComponent(), admin: self)
+        m_InputSystem.update(deltaTime: rawDeltaTime, component: singleton(Single_InputComponent.self), admin: self)
 
         for _ in 0 ..< clockComp.simulationSteps
         {
@@ -632,7 +523,7 @@ class EntityAdmin
         }
         
         m_ClockPostSimSystem.update(deltaTime: rawDeltaTime, component: clockComp, admin: self)
-        m_RenderSystem.update(deltaTime: clockComp.frameTime, component: metalSurfaceComponent(), admin: self)
+        m_RenderSystem.update(deltaTime: clockComp.frameTime, component: singleton(Single_MetalSurfaceComponent.self), admin: self)
     }
     
     private func updateSystems(deltaTime: TimeInterval)

@@ -211,7 +211,7 @@ struct PointerMapping: Codable, Hashable
 
 /// Singleton Component: Should have only one instance per `EntityAdmin`
 /// Source of the local player's `ControllerID` and inputs.
-final class Single_InputComponent: Component
+final class Single_InputComponent: SingletonComponent
 {
     static let typeID = componentTypeID(for: Single_InputComponent.self)
     var siblings: SiblingContainer?

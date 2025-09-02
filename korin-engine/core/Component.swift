@@ -19,6 +19,11 @@ protocol Component: AnyObject
     func typeID() -> ComponentTypeID
 }
 
+protocol SingletonComponent: Component
+{
+    init()
+}
+
 class SiblingContainer
 {
     var refs: [ComponentTypeID: WeakComponentRef] = [:]
@@ -42,7 +47,11 @@ extension Component
 class WeakComponentRef
 {
     weak var value: Component?
-    init(_ value: Component) { self.value = value }
+    
+    init(_ value: Component)
+    {
+        self.value = value
+    }
 }
 
 /// Utility for generating unique type IDs

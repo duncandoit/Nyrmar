@@ -24,9 +24,9 @@ class GameViewController: UIViewController
         view.layer.addSublayer(m_MetalLayer)
 
         // Ensure the viewport entity (singleton surface + camera)
-        m_Engine.admin().initializeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
+        m_Engine.admin().makeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
         
-        let bindingsComp = m_Engine.admin().playerBindingsComponent()
+        let bindingsComp = m_Engine.admin().singleton(Single_PlayerBindingsComponent.self)
         bindingsComp.pointer.append(contentsOf: [
 
         ])

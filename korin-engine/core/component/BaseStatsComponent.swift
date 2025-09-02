@@ -10,7 +10,7 @@ import Foundation
 /// This is a non-changeable set of the model stats that is unique for each character.
 /// Values for each stat range from 30-150.
 /// These are combined with EffortStats to increase the Hero Stats when the character levels up.
-class BaseStatsComponent: Component
+final class BaseStatsComponent: Component
 {
     static var typeID: ComponentTypeID = componentTypeID(for: BaseStatsComponent.self)
     var siblings: SiblingContainer?

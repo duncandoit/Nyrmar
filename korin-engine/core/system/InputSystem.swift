@@ -15,8 +15,8 @@ final class InputSystem: System
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
         let inputComp = component as! Single_InputComponent
-        let bindingsComp = admin.playerBindingsComponent()
-        let clockComp = admin.clockComponent()
+        let bindingsComp = admin.singleton(Single_PlayerBindingsComponent.self)
+        let clockComp = admin.singleton(Single_ClockComponent.self)
         var commands = inputComp.commandQueue
         
         // snapshot edges

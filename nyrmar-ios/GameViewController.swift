@@ -24,9 +24,9 @@ class GameViewController: UIViewController
         view.layer.addSublayer(m_MetalLayer)
 
         // Ensure the viewport entity (singleton surface + camera)
-        m_Engine.admin().initializeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
+        m_Engine.admin().makeMetalViewport(layer: m_MetalLayer, pixelsPerUnit: 100)
         
-        let bindingsComp = m_Engine.admin().playerBindingsComponent()
+        let bindingsComp = m_Engine.admin().singleton(Single_PlayerBindingsComponent.self)
         bindingsComp.pointer.append(contentsOf: [
             PointerMapping(intent: .moveToLocation, phases: [.up]),
             //PointerMapping(intent: .jump, phases: [.down]),
@@ -67,7 +67,7 @@ class GameViewController: UIViewController
             screenLocation: viewSpacePoint
         )
         
-        m_Engine.admin().inputComponent().pointerEvents.append(pointerData)
+        m_Engine.admin().singleton(Single_InputComponent.self).pointerEvents.append(pointerData)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
