@@ -22,9 +22,12 @@ struct TextureBatch
 
 /// Batches all sprites by texture and renders them into the singleton Metal surfaceComp component.
 /// All GPU objects live on `Single_MetalSurfaceComponent`.
-final class RenderSystem: System
+struct RenderSystem: System
 {
-    let requiredComponent: ComponentTypeID = Single_MetalSurfaceComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return Single_MetalSurfaceComponent.typeID
+    }
     
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

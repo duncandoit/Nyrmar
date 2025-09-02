@@ -10,6 +10,6 @@ import SpriteKit
 protocol System
 {
     /// Declares the component type it operates on
-    var requiredComponent: ComponentTypeID { get }
+    func requiredComponent() -> ComponentTypeID
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
 }

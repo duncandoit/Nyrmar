@@ -530,7 +530,7 @@ class EntityAdmin
     {
         for system in m_Systems
         {
-            let componentTypeID = system.requiredComponent
+            let componentTypeID = system.requiredComponent()
             guard let components = m_ComponentsByType[componentTypeID] else
             {
                 continue

@@ -7,9 +7,12 @@
 
 import Foundation
 
-final class ClockPreSimSystem: System
+struct ClockPreSimSystem: System
 {
-    let requiredComponent: ComponentTypeID = Single_ClockComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return Single_ClockComponent.typeID
+    }
     
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
@@ -28,10 +31,12 @@ final class ClockPreSimSystem: System
     }
 }
 
-
-final class ClockSimSystem: System
+struct ClockSimSystem: System
 {
-    let requiredComponent: ComponentTypeID = Single_ClockComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return Single_ClockComponent.typeID
+    }
     
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
@@ -44,9 +49,12 @@ final class ClockSimSystem: System
     }
 }
 
-final class ClockPostSimSystem: System
+struct ClockPostSimSystem: System
 {
-    let requiredComponent: ComponentTypeID = Single_ClockComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return Single_ClockComponent.typeID
+    }
     
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

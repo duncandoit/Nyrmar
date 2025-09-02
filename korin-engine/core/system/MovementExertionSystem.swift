@@ -10,9 +10,12 @@ import Foundation
 
 /// Reads MoveExertionComponent intents and writes acceleration *desired acceleration*
 /// into MoveStateComponent.acceleration via acceleration PD controller (seek).
-final class MovementExertionSystem: System
+struct MovementExertionSystem: System
 {
-    let requiredComponent: ComponentTypeID = MoveExertionComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return MoveExertionComponent.typeID
+    }
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

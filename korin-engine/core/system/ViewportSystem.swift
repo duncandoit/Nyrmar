@@ -7,9 +7,12 @@
 
 import MetalKit
 
-final class ViewportSystem: System
+struct ViewportSystem: System
 {
-    let requiredComponent: ComponentTypeID = Single_MetalSurfaceComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return Single_MetalSurfaceComponent.typeID
+    }
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

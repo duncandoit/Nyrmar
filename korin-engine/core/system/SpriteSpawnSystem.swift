@@ -8,9 +8,12 @@
 import Foundation
 import Metal
 
-final class SpriteSpawnSystem: System
+struct SpriteSpawnSystem: System
 {
-    let requiredComponent = SpritePrefabComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return SpritePrefabComponent.typeID
+    }
     
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

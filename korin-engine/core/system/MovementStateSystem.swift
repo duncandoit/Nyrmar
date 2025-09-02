@@ -9,9 +9,12 @@ import Foundation
 
 /// Applies one-shots (teleport/delta), integrates position using current velocity,
 /// performs seek arrival snap, constraints, and settles small motion.
-final class MovementStateSystem: System
+struct MovementStateSystem: System
 {
-    let requiredComponent: ComponentTypeID = MoveStateComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return MoveStateComponent.typeID
+    }
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

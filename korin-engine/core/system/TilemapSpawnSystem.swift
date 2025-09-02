@@ -8,9 +8,12 @@
 import Foundation
 import Metal
 
-final class TilemapSpawnSystem: System
+struct TilemapSpawnSystem: System
 {
-    let requiredComponent = TilemapPrefabComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return TilemapPrefabComponent.typeID
+    }
     
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

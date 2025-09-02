@@ -8,9 +8,12 @@
 import CoreFoundation
 import Foundation
 
-final class PhysicsSystem: System
+struct PhysicsSystem: System
 {
-    let requiredComponent: ComponentTypeID = PhysicsStateComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return PhysicsStateComponent.typeID
+    }
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

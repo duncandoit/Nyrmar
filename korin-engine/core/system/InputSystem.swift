@@ -8,9 +8,12 @@
 import Foundation
 
 /// Maps raw inputs in `Single_InputComponent` to `PlayerCommand`s using data from `Single_PlayerBindingsComponent`.
-final class InputSystem: System
+struct InputSystem: System
 {
-    let requiredComponent: ComponentTypeID = Single_InputComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return Single_InputComponent.typeID
+    }
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {

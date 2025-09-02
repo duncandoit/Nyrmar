@@ -7,9 +7,12 @@
 
 import MetalKit
 
-final class CommandSystem: System
+struct CommandSystem: System
 {
-    let requiredComponent: ComponentTypeID = ThrallComponent.typeID
+    func requiredComponent() -> ComponentTypeID
+    {
+        return ThrallComponent.typeID
+    }
 
     func update(deltaTime: TimeInterval, component: any Component, admin: EntityAdmin)
     {
