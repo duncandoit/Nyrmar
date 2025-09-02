@@ -12,6 +12,8 @@ typealias ComponentTypeID = UInt32
 private var nextComponentTypeID: ComponentTypeID = 0
 
 /// Protocol for all Components, with a shared sibling container for efficient updates
+///
+/// Components are pure state object and should contain zero behavior code.
 protocol Component: AnyObject
 {
     static var typeID: ComponentTypeID { get }

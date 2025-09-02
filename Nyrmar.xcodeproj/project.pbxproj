@@ -34,9 +34,7 @@
 				core/component/ThrallComponent.swift,
 				core/component/TilemapComponents.swift,
 				core/component/TransformComponent.swift,
-				core/EngineLoop.swift,
 				core/EntityAdmin.swift,
-				core/shader/sprite2d.metal,
 				core/System.swift,
 				core/system/ClockSystems.swift,
 				core/system/CommandSystem.swift,
@@ -51,6 +49,7 @@
 				core/util/AssetManagerUtil.swift,
 				core/util/CGVectorUtil.swift,
 				core/util/UInt64Util.swift,
+				EngineLoop.swift,
 			);
 			target = C37774AC2E5498A60009D73D /* nyrmar iOS */;
 		};
@@ -75,9 +74,7 @@
 				core/component/ThrallComponent.swift,
 				core/component/TilemapComponents.swift,
 				core/component/TransformComponent.swift,
-				core/EngineLoop.swift,
 				core/EntityAdmin.swift,
-				core/shader/sprite2d.metal,
 				core/System.swift,
 				core/system/ClockSystems.swift,
 				core/system/CommandSystem.swift,
@@ -92,6 +89,7 @@
 				core/util/AssetManagerUtil.swift,
 				core/util/CGVectorUtil.swift,
 				core/util/UInt64Util.swift,
+				EngineLoop.swift,
 			);
 			target = C37774BD2E5498A60009D73D /* nyrmar tvOS */;
 		};
@@ -116,9 +114,7 @@
 				core/component/ThrallComponent.swift,
 				core/component/TilemapComponents.swift,
 				core/component/TransformComponent.swift,
-				core/EngineLoop.swift,
 				core/EntityAdmin.swift,
-				core/shader/sprite2d.metal,
 				core/System.swift,
 				core/system/ClockSystems.swift,
 				core/system/CommandSystem.swift,
@@ -133,6 +129,7 @@
 				core/util/AssetManagerUtil.swift,
 				core/util/CGVectorUtil.swift,
 				core/util/UInt64Util.swift,
+				EngineLoop.swift,
 			);
 			target = C37774CD2E5498A60009D73D /* nyrmar macOS */;
 		};

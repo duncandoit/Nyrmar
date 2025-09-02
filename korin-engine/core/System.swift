@@ -7,6 +7,7 @@
 
 import SpriteKit
 
+/// Systems are pure behavior and should contain zero member state.
 protocol System
 {
     /// Declares the component type it operates on
